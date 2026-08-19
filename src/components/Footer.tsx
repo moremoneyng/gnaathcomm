@@ -13,48 +13,50 @@ export const Footer: React.FC = () => {
   return (
     <footer className="bg-[#f5f5f7] text-slate-600 border-t border-slate-200 relative overflow-hidden pb-16 md:pb-0">
       
-      {/* Top Value Strip */}
-      <div className="border-b border-slate-200 bg-white py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-6 text-center md:text-left">
-          <div className="flex items-center gap-3 justify-center md:justify-start">
-            <div className="p-2.5 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600">
+      {/* Top Value Strip - Organized 2x2 Card Grid on Mobile */}
+      <div className="border-b border-slate-200 bg-white py-6 sm:py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
+          
+          <div className="bg-slate-50/90 sm:bg-transparent p-3.5 sm:p-0 rounded-2xl border border-slate-200/80 sm:border-0 flex flex-col sm:flex-row items-center sm:items-start justify-center sm:justify-start text-center sm:text-left gap-2.5 sm:gap-3 shadow-xs sm:shadow-none hover:bg-slate-100/80 sm:hover:bg-transparent transition-colors">
+            <div className="p-2.5 rounded-2xl bg-emerald-100/80 text-emerald-700 shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900">Genuine Guarantee</h4>
-              <p className="text-[11px] text-slate-500">100% Original Products &amp; Warranties</p>
+              <h4 className="text-xs font-extrabold text-slate-950">Genuine Guarantee</h4>
+              <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5">100% Original Products &amp; Warranties</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 justify-center md:justify-start">
-            <div className="p-2.5 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600">
+          <div className="bg-slate-50/90 sm:bg-transparent p-3.5 sm:p-0 rounded-2xl border border-slate-200/80 sm:border-0 flex flex-col sm:flex-row items-center sm:items-start justify-center sm:justify-start text-center sm:text-left gap-2.5 sm:gap-3 shadow-xs sm:shadow-none hover:bg-slate-100/80 sm:hover:bg-transparent transition-colors">
+            <div className="p-2.5 rounded-2xl bg-emerald-100/80 text-emerald-700 shrink-0">
               <Wrench className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900">Expert Phone Repairs</h4>
-              <p className="text-[11px] text-slate-500">Screen, Battery &amp; Board Fixes</p>
+              <h4 className="text-xs font-extrabold text-slate-950">Expert Phone Repairs</h4>
+              <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5">Screen, Battery &amp; Board Fixes</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 justify-center md:justify-start">
-            <div className="p-2.5 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600">
+          <div className="bg-slate-50/90 sm:bg-transparent p-3.5 sm:p-0 rounded-2xl border border-slate-200/80 sm:border-0 flex flex-col sm:flex-row items-center sm:items-start justify-center sm:justify-start text-center sm:text-left gap-2.5 sm:gap-3 shadow-xs sm:shadow-none hover:bg-slate-100/80 sm:hover:bg-transparent transition-colors">
+            <div className="p-2.5 rounded-2xl bg-amber-100/80 text-amber-700 shrink-0">
               <Sun className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900">Solar Installations</h4>
-              <p className="text-[11px] text-slate-500">Inverters, Panels &amp; Maintenance</p>
+              <h4 className="text-xs font-extrabold text-slate-950">Solar Installations</h4>
+              <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5">Inverters, Panels &amp; Maintenance</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 justify-center md:justify-start">
-            <div className="p-2.5 rounded-2xl bg-cyan-50 border border-cyan-100 text-cyan-600">
+          <div className="bg-slate-50/90 sm:bg-transparent p-3.5 sm:p-0 rounded-2xl border border-slate-200/80 sm:border-0 flex flex-col sm:flex-row items-center sm:items-start justify-center sm:justify-start text-center sm:text-left gap-2.5 sm:gap-3 shadow-xs sm:shadow-none hover:bg-slate-100/80 sm:hover:bg-transparent transition-colors">
+            <div className="p-2.5 rounded-2xl bg-cyan-100/80 text-cyan-700 shrink-0">
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900">Dual Office Branches</h4>
-              <p className="text-[11px] text-slate-500">Lagos Head Office &amp; ABSU Uturu</p>
+              <h4 className="text-xs font-extrabold text-slate-950">Dual Office Branches</h4>
+              <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5">Lagos Head Office &amp; ABSU Uturu</p>
             </div>
           </div>
+
         </div>
       </div>
 
