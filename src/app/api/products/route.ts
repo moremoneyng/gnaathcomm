@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAdminSession } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get('category');
@@ -58,7 +60,10 @@ export async function GET(request: Request) {
       isFeatured: p.isFeatured,
     }));
 
-    return NextResponse.json({ success: true, products: formattedProducts });
+    return NextResponse.json(
+      { success: true, products: formattedProducts },
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+    );
   } catch (error: any) {
     console.error('Database query failed while loading products:', error?.message || error);
     return NextResponse.json(
@@ -92,23 +97,23 @@ export async function POST(request: Request) {
       isFeatured,
     } = body;
 
-    if (!name || !price || !image || !categorySlug) {
+    const numericPrice = Number(price);
+    const numericOriginalPrice = originalPrice === null || originalPrice === '' ? null : Number(originalPrice);
+
+    if (!name?.trim() || !Number.isFinite(numericPrice) || numericPrice <= 0 || !image?.trim() || !categorySlug?.trim()) {
       return NextResponse.json({ success: false, error: 'Missing required product fields (name, price, image, category)' }, { status: 400 });
     }
 
-    // Find or create category
-    let category = await prisma.category.findUnique({
+    if (numericOriginalPrice !== null && (!Number.isFinite(numericOriginalPrice) || numericOriginalPrice < 0)) {
+      return NextResponse.json({ success: false, error: 'Original price must be a valid number.' }, { status: 400 });
+    }
+
+    const category = await prisma.category.findUnique({
       where: { slug: categorySlug },
     });
 
     if (!category) {
-      category = await prisma.category.create({
-        data: {
-          name: categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1),
-          slug: categorySlug,
-          description: `${categorySlug} category`,
-        },
-      });
+      return NextResponse.json({ success: false, error: 'Selected category no longer exists. Refresh and choose a category.' }, { status: 400 });
     }
 
     const slug = `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString().slice(-4)}`;
@@ -118,8 +123,8 @@ export async function POST(request: Request) {
         slug,
         name,
         brand: brand || 'G Naath Global',
-        price: parseFloat(price),
-        originalPrice: originalPrice ? parseFloat(originalPrice) : null,
+        price: numericPrice,
+        originalPrice: numericOriginalPrice,
         image,
         images: images && images.length > 0 ? images : [image],
         description: description || '',
@@ -132,7 +137,7 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({ success: true, product });
+    return NextResponse.json({ success: true, product }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating product:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useStore } from '@/context/StoreContext';
-import { CATEGORIES } from '@/data/storeCatalog';
+import { CATEGORIES as DEFAULT_CATEGORIES } from '@/data/storeCatalog';
 import { LayoutGrid, Smartphone, Plug, Headphones, Video, Sun } from 'lucide-react';
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -16,6 +16,24 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 export function CategoryBar() {
   const { selectedCategory, setSelectedCategory } = useStore();
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+
+  useEffect(() => {
+    fetch('/api/categories', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+          setCategories([
+            {
+              ...DEFAULT_CATEGORIES[0],
+              itemCount: data.categories.reduce((sum: number, category: { itemCount: number }) => sum + category.itemCount, 0),
+            },
+            ...data.categories,
+          ]);
+        }
+      })
+      .catch(() => undefined);
+  }, []);
 
   return (
     <div className="py-6 sm:py-8">
@@ -30,7 +48,7 @@ export function CategoryBar() {
 
       {/* Organized 3-Column Square Box Grid */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
-        {CATEGORIES.map((category) => {
+        {categories.map((category) => {
           const IconComponent = ICON_MAP[category.iconName] || LayoutGrid;
           const isSelected = selectedCategory === category.id;
 

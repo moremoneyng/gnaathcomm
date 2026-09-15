@@ -147,7 +147,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const refreshProducts = async () => {
     try {
       setIsLoadingProducts(true);
-      const res = await fetch('/api/products');
+      const res = await fetch('/api/products', { cache: 'no-store' });
       const data = await res.json();
       setProducts(data.success && Array.isArray(data.products) ? data.products : []);
     } catch (err) {

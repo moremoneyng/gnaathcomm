@@ -17,6 +17,7 @@ import {
   LogOut,
   ChevronDown,
   PackageCheck,
+  ArrowLeft,
 } from 'lucide-react';
 import { cleanPhoneNumber } from '@/utils/whatsapp';
 
@@ -36,6 +37,7 @@ export const Navbar: React.FC = () => {
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [canGoBack, setCanGoBack] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
@@ -52,6 +54,18 @@ export const Navbar: React.FC = () => {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  useEffect(() => {
+    setCanGoBack(window.history.length > 1);
+  }, [pathname]);
+
+  const handleBack = () => {
+    if (canGoBack) {
+      router.back();
+    } else {
+      router.push('/');
+    }
+  };
 
   const scrollToSection = (id: string) => {
     if (pathname !== '/') {
@@ -92,6 +106,17 @@ export const Navbar: React.FC = () => {
 
           {/* Desktop Navigation Links */}
           <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold text-slate-700">
+            {pathname !== '/' && (
+              <button
+                type="button"
+                onClick={handleBack}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-700 transition-colors"
+                title="Go back"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Back
+              </button>
+            )}
             <Link
               href="/shop"
               className={`px-3 py-1.5 rounded-full font-bold transition-all ${

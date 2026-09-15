@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
 import { StoreProvider } from '@/context/StoreContext';
+import { Navbar } from '@/components/Navbar';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -70,7 +72,11 @@ export default function RootLayout({
         suppressHydrationWarning
         className="bg-white text-slate-900 antialiased font-sans min-h-screen selection:bg-emerald-500 selection:text-white"
       >
-        <StoreProvider>{children}</StoreProvider>
+        <StoreProvider>
+          <Navbar />
+          <div className="pb-20 md:pb-0">{children}</div>
+          <MobileBottomNav />
+        </StoreProvider>
       </body>
     </html>
   );

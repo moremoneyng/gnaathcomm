@@ -3,7 +3,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { AnnouncementBar } from '@/components/AnnouncementBar';
-import { Navbar } from '@/components/Navbar';
 import { HeroSection } from '@/components/HeroSection';
 import { CategoryBar } from '@/components/CategoryBar';
 import { ProductGrid } from '@/components/ProductGrid';
@@ -11,7 +10,6 @@ import { HomeServicesSpotlight } from '@/components/HomeServicesSpotlight';
 import { LocationsSection } from '@/components/LocationsSection';
 import { BrandMarquee } from '@/components/BrandMarquee';
 import { Footer } from '@/components/Footer';
-import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { ProductModal } from '@/components/ProductModal';
 import { CartDrawer } from '@/components/CartDrawer';
 import { ToastNotification } from '@/components/ToastNotification';
@@ -24,7 +22,6 @@ export default function Home() {
       <AnnouncementBar />
 
       {/* Glassmorphism Header */}
-      <Navbar />
 
       {/* Main Content Area */}
       <main className="flex-grow">
@@ -64,7 +61,6 @@ export default function Home() {
       <Footer />
 
       {/* Sticky Mobile Bottom Navigation Bar */}
-      <MobileBottomNav />
 
       {/* Modals & Popups */}
       <ProductModal />

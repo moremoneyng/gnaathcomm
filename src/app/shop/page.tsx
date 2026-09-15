@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useStore } from '@/context/StoreContext';
-import { CATEGORIES } from '@/data/storeCatalog';
+import { CATEGORIES as DEFAULT_CATEGORIES } from '@/data/storeCatalog';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductModal } from '@/components/ProductModal';
 import { CartDrawer } from '@/components/CartDrawer';
@@ -42,6 +42,7 @@ export default function ShopPage() {
   const [sortBy, setSortBy] = useState<'featured' | 'price-low' | 'price-high' | 'rating'>(
     'featured'
   );
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
 
   // Synchronize category or search from URL if present
   useEffect(() => {
@@ -53,6 +54,28 @@ export default function ShopPage() {
       if (qParam) setSearchQuery(qParam);
     }
   }, [setSelectedCategory, setSearchQuery]);
+
+  useEffect(() => {
+    fetch('/api/categories', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+          setCategories([
+            {
+              id: 'all',
+              name: 'All Products',
+              slug: 'all',
+              iconName: 'LayoutGrid',
+              description: 'All products',
+              itemCount: data.categories.reduce((sum: number, category: { itemCount: number }) => sum + category.itemCount, 0),
+              image: '',
+            },
+            ...data.categories,
+          ]);
+        }
+      })
+      .catch(() => undefined);
+  }, []);
 
   // Extract all unique brands from available products
   const availableBrands = useMemo(() => {
@@ -186,7 +209,7 @@ export default function ShopPage() {
           </div>
 
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {CATEGORIES.map((cat) => {
+            {categories.map((cat) => {
               const isActive = selectedCategory === cat.slug;
               return (
                 <button
@@ -281,7 +304,7 @@ export default function ShopPage() {
 
             {selectedCategory !== 'all' && (
               <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-100 border border-slate-300 text-slate-800 text-xs font-bold">
-                Category: {CATEGORIES.find((c) => c.slug === selectedCategory)?.name || selectedCategory}
+                Category: {categories.find((c) => c.slug === selectedCategory)?.name || selectedCategory}
                 <button onClick={() => setSelectedCategory('all')} className="hover:text-rose-600 ml-1">
                   <X className="w-3 h-3" />
                 </button>

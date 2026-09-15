@@ -2,9 +2,7 @@
 
 import React, { useState } from 'react';
 import { AnnouncementBar } from '@/components/AnnouncementBar';
-import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
-import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { ProductModal } from '@/components/ProductModal';
 import { CartDrawer } from '@/components/CartDrawer';
 import { MerchantConfigModal } from '@/components/MerchantConfigModal';
@@ -54,7 +52,6 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-900 selection:bg-emerald-500 selection:text-white">
       <AnnouncementBar />
-      <Navbar />
 
       <main className="flex-grow bg-[#f8f9fa] py-10 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -331,7 +328,6 @@ export default function ContactPage() {
       </main>
 
       <Footer />
-      <MobileBottomNav />
 
       <ProductModal />
       <CartDrawer />
