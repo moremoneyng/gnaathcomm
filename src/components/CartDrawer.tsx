@@ -17,20 +17,22 @@ import {
 
 export const CartDrawer: React.FC = () => {
   const {
-    isCartOpen,
-    setIsCartOpen,
     cart,
-    updateQuantity,
     removeFromCart,
+    updateQuantity,
     clearCart,
     cartSubtotal,
+    isCartOpen,
+    setIsCartOpen,
     storeConfig,
     customerDetails,
     setCustomerDetails,
     showToast,
+    submitOrder,
   } = useStore();
 
   const [step, setStep] = useState<'cart' | 'checkout'>('cart');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -40,7 +42,7 @@ export const CartDrawer: React.FC = () => {
     });
   };
 
-  const handleCheckoutSendWhatsApp = (e: React.FormEvent) => {
+  const handleCheckoutSendWhatsApp = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (cart.length === 0) {
@@ -53,6 +55,15 @@ export const CartDrawer: React.FC = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
+    // Save order in Supabase PostgreSQL
+    try {
+      await submitOrder();
+    } catch (err) {
+      console.error('Failed to save order in DB:', err);
+    }
+
     // Trigger celebratory confetti
     confetti({
       particleCount: 80,
@@ -62,11 +73,14 @@ export const CartDrawer: React.FC = () => {
 
     const url = generateCartWhatsAppUrl(cart, customerDetails, storeConfig, cartSubtotal);
 
-    showToast('Redirecting to WhatsApp with your order summary...');
+    showToast('Order saved to database! Opening WhatsApp...');
 
     setTimeout(() => {
       window.open(url, '_blank');
-    }, 400);
+      setIsSubmitting(false);
+      setIsCartOpen(false);
+      setStep('cart');
+    }, 500);
   };
 
   if (!isCartOpen) return null;
@@ -75,7 +89,7 @@ export const CartDrawer: React.FC = () => {
     <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/60 backdrop-blur-md transition-opacity">
       <div className="absolute inset-0" onClick={() => setIsCartOpen(false)} />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10 z-50">
         <div className="w-screen max-w-md bg-white border-l border-slate-200 text-slate-900 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
           
           {/* Drawer Header */}

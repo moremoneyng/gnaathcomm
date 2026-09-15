@@ -2,16 +2,16 @@
 
 import React, { useMemo } from 'react';
 import { useStore } from '@/context/StoreContext';
-import { PRODUCTS, CATEGORIES } from '@/data/mockProducts';
+import { CATEGORIES } from '@/data/storeCatalog';
 import ProductCard from './ProductCard';
 import { SlidersHorizontal, SearchX, Sparkles } from 'lucide-react';
 
 export function ProductGrid() {
-  const { searchQuery, selectedCategory, sortBy, setSortBy, setSearchQuery, setSelectedCategory } =
+  const { products, searchQuery, selectedCategory, sortBy, setSortBy, setSearchQuery, setSelectedCategory } =
     useStore();
 
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter((product) => {
+    return products.filter((product) => {
       // Category filter
       if (selectedCategory !== 'all' && product.category !== selectedCategory) {
         return false;
@@ -34,7 +34,7 @@ export function ProductGrid() {
       if (sortBy === 'newest') return b.id.localeCompare(a.id);
       return 0; // featured default
     });
-  }, [selectedCategory, searchQuery, sortBy]);
+  }, [products, selectedCategory, searchQuery, sortBy]);
 
   const activeCategory = CATEGORIES.find((c) => c.id === selectedCategory);
 

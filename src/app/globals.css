@@ -20,3 +20,46 @@ body {
   font-family: var(--font-outfit), var(--font-inter), system-ui, sans-serif;
 }
 
+.dashboard-light .bg-slate-950 {
+  background-color: #ffffff !important;
+}
+
+.dashboard-light .bg-slate-900,
+.dashboard-light .bg-slate-900\/80,
+.dashboard-light .bg-slate-900\/50 {
+  background-color: #ffffff !important;
+}
+
+.dashboard-light .bg-slate-800\/80 {
+  background-color: #f1f5f9 !important;
+}
+
+.dashboard-light .bg-gradient-to-br {
+  background-image: linear-gradient(135deg, #ffffff, #f0fdf4) !important;
+}
+
+.dashboard-light .text-white,
+.dashboard-light .text-slate-100,
+.dashboard-light .text-slate-200,
+.dashboard-light .text-slate-300 {
+  color: #0f172a !important;
+}
+
+.dashboard-light .text-slate-400,
+.dashboard-light .text-slate-500 {
+  color: #64748b !important;
+}
+
+.dashboard-light .text-slate-600 {
+  color: #94a3b8 !important;
+}
+
+.dashboard-light .border-slate-800,
+.dashboard-light .border-slate-700\/50 {
+  border-color: #e2e8f0 !important;
+}
+
+.dashboard-light .border-slate-800\/60 {
+  border-color: #e2e8f0 !important;
+}
+

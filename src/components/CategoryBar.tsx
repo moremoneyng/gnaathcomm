@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useStore } from '@/context/StoreContext';
-import { CATEGORIES } from '@/data/mockProducts';
+import { CATEGORIES } from '@/data/storeCatalog';
 import { LayoutGrid, Smartphone, Plug, Headphones, Video, Sun } from 'lucide-react';
 
 const ICON_MAP: Record<string, React.ElementType> = {

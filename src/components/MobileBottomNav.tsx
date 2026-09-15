@@ -25,37 +25,41 @@ export const MobileBottomNav: React.FC = () => {
   const isContactPage = pathname === '/contact';
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 border-t border-slate-200 backdrop-blur-xl px-3 py-2 flex items-center justify-around shadow-xl">
-      <button
-        onClick={() => handleNavClick('catalog')}
-        className={`flex flex-col items-center gap-1 transition-colors p-1 ${
-          !isContactPage ? 'text-slate-900 font-bold' : 'text-slate-600 hover:text-slate-950'
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 border-t border-slate-200/90 backdrop-blur-2xl px-3 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex items-center justify-around shadow-[0_-10px_25px_rgba(0,0,0,0.08)]">
+      <Link
+        href="/shop"
+        className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-1 transition-all rounded-xl p-1 active:scale-95 ${
+          pathname === '/shop' ? 'text-emerald-600 font-extrabold' : 'text-slate-600 hover:text-slate-950'
         }`}
       >
         <Store className="w-5 h-5" />
-        <span className="text-[10px] font-semibold">Store</span>
-      </button>
+        <span className="text-[10px] font-semibold">Shop</span>
+      </Link>
 
-      <button
-        onClick={() => handleNavClick('repairs')}
-        className="flex flex-col items-center gap-1 text-slate-600 hover:text-emerald-600 transition-colors p-1"
+      <Link
+        href="/repairs"
+        className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-1 transition-all rounded-xl p-1 active:scale-95 ${
+          pathname === '/repairs' ? 'text-emerald-600 font-extrabold' : 'text-slate-600 hover:text-emerald-600'
+        }`}
       >
         <Wrench className="w-5 h-5" />
         <span className="text-[10px] font-semibold">Repairs</span>
-      </button>
+      </Link>
 
-      <button
-        onClick={() => handleNavClick('solar')}
-        className="flex flex-col items-center gap-1 text-slate-600 hover:text-amber-600 transition-colors p-1"
+      <Link
+        href="/solar"
+        className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-1 transition-all rounded-xl p-1 active:scale-95 ${
+          pathname === '/solar' ? 'text-amber-600 font-extrabold' : 'text-slate-600 hover:text-amber-600'
+        }`}
       >
         <Sun className="w-5 h-5" />
         <span className="text-[10px] font-semibold">Solar</span>
-      </button>
+      </Link>
 
       <Link
         href="/contact"
-        className={`flex flex-col items-center gap-1 transition-colors p-1 ${
-          isContactPage ? 'text-emerald-600 font-bold' : 'text-slate-600 hover:text-emerald-600'
+        className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-1 transition-all rounded-xl p-1 active:scale-95 ${
+          isContactPage ? 'text-emerald-600 font-extrabold' : 'text-slate-600 hover:text-emerald-600'
         }`}
       >
         <PhoneCall className="w-5 h-5" />
@@ -64,7 +68,7 @@ export const MobileBottomNav: React.FC = () => {
 
       <button
         onClick={() => setIsCartOpen(true)}
-        className="relative flex flex-col items-center gap-1 text-slate-600 hover:text-emerald-600 transition-colors p-1"
+        className="relative flex flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-1 text-slate-600 hover:text-emerald-600 transition-all rounded-xl p-1 active:scale-95"
       >
         <div className="relative">
           <ShoppingBag className="w-5 h-5 text-emerald-600" />

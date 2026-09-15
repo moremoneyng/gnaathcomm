@@ -2,9 +2,30 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CartItem, CustomerDetails, Product, StoreConfig } from '@/types/ecommerce';
-import { DEFAULT_STORE_CONFIG } from '@/data/mockProducts';
+import { DEFAULT_STORE_CONFIG } from '@/data/storeCatalog';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  preferredBranch?: string;
+  isVerified?: boolean;
+}
 
 interface StoreContextType {
+  // User Auth
+  user: User | null;
+  userLoading: boolean;
+  checkAuthStatus: () => Promise<void>;
+  logoutUser: () => Promise<void>;
+
+  // Products
+  products: Product[];
+  isLoadingProducts: boolean;
+  refreshProducts: () => Promise<void>;
+  submitOrder: () => Promise<{ success: boolean; orderNumber?: string; error?: string }>;
+
   // Config & Details
   config: StoreConfig;
   storeConfig: StoreConfig;
@@ -49,12 +70,17 @@ interface StoreContextType {
 
   // Toast notification
   toastMessage: string | null;
-  showToast: (msg: string, type?: 'success' | 'error') => void;
+  showToast: (msg: string, type?: 'success' | 'error' | 'info') => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [config, setConfig] = useState<StoreConfig>(DEFAULT_STORE_CONFIG);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
@@ -65,6 +91,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails>({
     name: '',
+    email: '',
     phone: '',
     address: '',
     city: 'Lagos',
@@ -76,6 +103,87 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState<'featured' | 'price-low' | 'price-high' | 'rating' | 'newest'>('featured');
+
+  // Check auth session
+  const checkAuthStatus = async () => {
+    try {
+      setUserLoading(true);
+      const res = await fetch('/api/auth/me');
+      const data = await res.json();
+      if (res.ok && data.authenticated && data.user) {
+        setUser(data.user);
+        setCustomerDetails((prev) => ({
+          ...prev,
+          name: data.user.name || prev.name,
+          email: data.user.email || prev.email,
+          phone: data.user.phone || prev.phone,
+          preferredBranch: data.user.preferredBranch || prev.preferredBranch,
+        }));
+      } else {
+        setUser(null);
+      }
+    } catch (err) {
+      setUser(null);
+    } finally {
+      setUserLoading(false);
+    }
+  };
+
+  const logoutUser = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {
+      console.error('Logout error:', e);
+    } finally {
+      setUser(null);
+    }
+  };
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  // Fetch products from database
+  const refreshProducts = async () => {
+    try {
+      setIsLoadingProducts(true);
+      const res = await fetch('/api/products');
+      const data = await res.json();
+      setProducts(data.success && Array.isArray(data.products) ? data.products : []);
+    } catch (err) {
+      console.error('Error fetching products from API:', err);
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshProducts();
+  }, []);
+
+  // Submit order to PostgreSQL database
+  const submitOrder = async (): Promise<{ success: boolean; orderNumber?: string; error?: string }> => {
+    try {
+      const cartSubtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerDetails,
+          cart,
+          totalAmount: cartSubtotal,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.order) {
+        clearCart();
+        return { success: true, orderNumber: data.order.orderNumber };
+      }
+      return { success: false, error: data.error || 'Failed to submit order' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error' };
+    }
+  };
 
   // Load saved state from localStorage on mount
   useEffect(() => {
@@ -192,6 +300,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   return (
     <StoreContext.Provider
       value={{
+        user,
+        userLoading,
+        checkAuthStatus,
+        logoutUser,
+        products,
+        isLoadingProducts,
+        refreshProducts,
+        submitOrder,
         config,
         storeConfig: config,
         updateConfig,
@@ -238,3 +354,4 @@ export function useStore() {
   }
   return context;
 }
+

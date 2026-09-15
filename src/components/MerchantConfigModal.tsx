@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { X, Settings, Phone, Store, DollarSign, Save, RotateCcw, MapPin, Mail } from 'lucide-react';
-import { DEFAULT_STORE_CONFIG } from '@/data/mockProducts';
+import { DEFAULT_STORE_CONFIG } from '@/data/storeCatalog';
 
 export function MerchantConfigModal() {
   const { isConfigModalOpen, setIsConfigModalOpen, config, updateConfig } = useStore();

@@ -175,10 +175,15 @@ export const Footer: React.FC = () => {
         {/* Bottom Copyright Bar */}
         <div className="mt-10 pt-6 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 font-medium">
           <p>© {new Date().getFullYear()} G Naath Global Communications Ltd. All rights reserved.</p>
-          <div className="flex items-center gap-1">
-            <span>Built with</span>
-            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
-            <span>for Ultimate Customer Satisfaction</span>
+          <div className="flex items-center gap-4">
+            <Link href="/admin" className="hover:text-emerald-700 font-bold transition-colors">
+              Admin Portal
+            </Link>
+            <div className="flex items-center gap-1">
+              <span>Built with</span>
+              <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+              <span>for Ultimate Customer Satisfaction</span>
+            </div>
           </div>
         </div>
       </div>

@@ -1,0 +1,200 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String?
+  image       String?
+  iconName    String?   @default("LayoutGrid")
+  itemCount   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id            String      @id @default(cuid())
+  slug          String      @unique
+  name          String
+  brand         String?
+  description   String      @db.Text
+  price         Float
+  originalPrice Float?
+  rating        Float       @default(5.0)
+  reviewsCount  Int         @default(0)
+  image         String
+  images        String[]    @default([])
+  badge         String?
+  inStock       Boolean     @default(true)
+  isFeatured    Boolean     @default(false)
+  features      String[]    @default([])
+  options       Json?
+  categoryId    String
+  category      Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  orderItems    OrderItem[]
+  reviews       Review[]
+
+  @@map("products")
+}
+
+model User {
+  id              String      @id @default(cuid())
+  email           String      @unique
+  password        String
+  name            String
+  phone           String?
+  address         String?
+  city            String?     @default("Lagos")
+  preferredBranch String?     @default("lagos_head_office")
+  isVerified      Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  orders          Order[]
+
+  @@map("users")
+}
+
+model OtpVerification {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  type      String   @default("REGISTER") // REGISTER | PASSWORD_RESET
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("otp_verifications")
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  orderNumber       String      @unique
+  userId            String?
+  user              User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  customerName      String
+  customerEmail     String?
+  customerPhone     String
+  customerAddress   String
+  customerCity      String
+  preferredBranch   String      @default("lagos_head_office")
+  deliveryNotes     String?
+  paymentPreference String      @default("whatsapp_discuss")
+  paymentStatus     String      @default("PENDING")
+  orderStatus       String      @default("PENDING")
+  totalAmount       Float
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  items             OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id              String   @id @default(cuid())
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       String?
+  product         Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName     String
+  price           Float
+  quantity        Int
+  selectedOptions Json?
+
+  @@map("order_items")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  author    String
+  rating    Int
+  comment   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@map("reviews")
+}
+
+model RepairBooking {
+  id              String   @id @default(cuid())
+  customerName    String?
+  customerPhone   String?
+  deviceName      String
+  issueType       String
+  preferredBranch String   @default("lagos_head_office")
+  additionalNotes String?  @db.Text
+  status          String   @default("PENDING")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("repair_bookings")
+}
+
+model SolarQuoteRequest {
+  id               String   @id @default(cuid())
+  customerName     String?
+  customerPhone    String?
+  systemSize       String
+  applianceDetails String   @db.Text
+  location         String
+  serviceType      String
+  status           String   @default("PENDING")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("solar_quote_requests")
+}
+
+model StoreConfig {
+  id                    String   @id @default("default")
+  storeName             String
+  motto                 String
+  rcNumber              String
+  tagline               String
+  whatsappNumber        String
+  whatsappDisplayNumber String
+  email                 String
+  facebookName          String
+  facebookUrl           String
+  currencySymbol        String
+  currencyCode          String
+  bannerAnnouncement    String
+  headOfficeAddress     String
+  headOfficeLandmark    String
+  branchOfficeAddress   String
+  branchOfficeLandmark  String
+  businessHours         String
+  logoUrl               String
+  brands                String[] @default([])
+  updatedAt             DateTime @updatedAt
+
+  @@map("store_configs")
+}
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String   @default("G Naath Admin")
+  role      String   @default("ADMIN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admin_users")
+}
+
