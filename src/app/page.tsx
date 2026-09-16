@@ -12,7 +12,6 @@ import { BrandMarquee } from '@/components/BrandMarquee';
 import { Footer } from '@/components/Footer';
 import { ProductModal } from '@/components/ProductModal';
 import { CartDrawer } from '@/components/CartDrawer';
-import { ToastNotification } from '@/components/ToastNotification';
 import { ArrowRight, ShoppingBag } from 'lucide-react';
 
 export default function Home() {
@@ -65,7 +64,6 @@ export default function Home() {
       {/* Modals & Popups */}
       <ProductModal />
       <CartDrawer />
-      <ToastNotification />
     </div>
   );
 }

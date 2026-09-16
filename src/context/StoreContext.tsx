@@ -149,9 +149,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setIsLoadingProducts(true);
       const res = await fetch('/api/products', { cache: 'no-store' });
       const data = await res.json();
-      setProducts(data.success && Array.isArray(data.products) ? data.products : []);
+      if (!res.ok || !data.success || !Array.isArray(data.products)) {
+        throw new Error(data.error || 'Failed to load products.');
+      }
+      setProducts(data.products);
     } catch (err) {
       console.error('Error fetching products from API:', err);
+      setProducts([]);
+      showToast(err instanceof Error ? err.message : 'Failed to load products.');
     } finally {
       setIsLoadingProducts(false);
     }
@@ -289,10 +294,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setActiveProductModal(null);
   };
 
-  const showToast = (msg: string) => {
+  function showToast(msg: string) {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
-  };
+  }
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const cartSubtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
@@ -354,4 +359,3 @@ export function useStore() {
   }
   return context;
 }
-

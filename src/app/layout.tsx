@@ -4,6 +4,7 @@ import './globals.css';
 import { StoreProvider } from '@/context/StoreContext';
 import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { ToastNotification } from '@/components/ToastNotification';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -75,6 +76,7 @@ export default function RootLayout({
           <Navbar />
           <div className="pb-20 md:pb-0">{children}</div>
           <MobileBottomNav />
+          <ToastNotification />
         </StoreProvider>
       </body>
     </html>

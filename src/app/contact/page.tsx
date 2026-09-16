@@ -6,7 +6,6 @@ import { Footer } from '@/components/Footer';
 import { ProductModal } from '@/components/ProductModal';
 import { CartDrawer } from '@/components/CartDrawer';
 import { MerchantConfigModal } from '@/components/MerchantConfigModal';
-import { ToastNotification } from '@/components/ToastNotification';
 import { useStore } from '@/context/StoreContext';
 import { cleanPhoneNumber } from '@/utils/whatsapp';
 import {
@@ -332,7 +331,6 @@ export default function ContactPage() {
       <ProductModal />
       <CartDrawer />
       <MerchantConfigModal />
-      <ToastNotification />
     </div>
   );
 }

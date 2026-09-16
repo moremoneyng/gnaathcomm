@@ -6,7 +6,6 @@ import { CATEGORIES as DEFAULT_CATEGORIES } from '@/data/storeCatalog';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductModal } from '@/components/ProductModal';
 import { CartDrawer } from '@/components/CartDrawer';
-import { ToastNotification } from '@/components/ToastNotification';
 import {
   Search,
   SlidersHorizontal,
@@ -149,9 +148,6 @@ export default function ShopPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-slate-800 pb-20">
-      {/* Toast Notification */}
-      <ToastNotification />
-
       {/* Cart Drawer */}
       <CartDrawer />
 
