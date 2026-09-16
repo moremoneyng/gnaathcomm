@@ -41,7 +41,7 @@ export function CategoryBar() {
         <div>
           <h2 className="font-heading text-xl sm:text-2xl font-black text-slate-950 tracking-tight">Explore Products</h2>
           <p className="text-xs text-slate-500 mt-0.5 sm:mt-1 font-medium">
-            Smartphones, chargers, audio gadgets &amp; solar materials
+            Technology, appliances, mobility, solar energy, accessories and more
           </p>
         </div>
       </div>

@@ -5,12 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { ShieldCheck, MapPin, Phone, Mail, Wrench, Sun, Clock, Heart, ArrowRight } from 'lucide-react';
-import { cleanPhoneNumber } from '@/utils/whatsapp';
 
 export const Footer: React.FC = () => {
   const { storeConfig } = useStore();
-  const cleanPhone = cleanPhoneNumber(storeConfig.whatsappNumber);
-
   return (
     <footer className="bg-[#f8f9fa] text-slate-700 border-t border-slate-200 relative overflow-hidden pb-16 md:pb-0">
       
@@ -87,7 +84,7 @@ export const Footer: React.FC = () => {
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              We deal on original smartphones, authorized tech accessories, content creation gadgets, phone repair services, and clean solar energy installations.
+              Shop smartphones, electronics, home and office appliances, solar systems, gadgets, cars, bikes and accessories, with expert repair and installation services.
             </p>
 
             <div className="p-3 bg-white border border-slate-200/90 rounded-xl text-emerald-800 text-xs font-extrabold shadow-xs inline-block">

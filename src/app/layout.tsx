@@ -20,9 +20,9 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://gnaathcommunications.com'),
-  title: 'G Naath Global Communications Ltd | Phones, Accessories, Repairs & Solar',
+  title: 'G Naath Global Communications Ltd | Everything Modern, All in One Place',
   description:
-    'G Naath Global Communications Ltd (RC: 6898302). Ultimate Satisfaction Assured! We sell mobile phones and accessories from Apple, Samsung, JBL, Anker and more, offer phone repairs, and install solar systems in Lagos & Abia State.',
+    'Shop smartphones, electronics, home and office appliances, solar systems, gadgets, cars and bikes at G Naath, with expert repairs and installations in Lagos and Abia State.',
   keywords: [
     'G Naath Global Communications',
     'Mobile Phones Lagos',
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'G Naath Global Communications Ltd',
-    description: 'Ultimate Satisfaction Assured! Mobile Phones, Accessories, Repair Services & Solar Installations.',
+    description: 'Everything modern in one trusted place: technology, appliances, solar energy, mobility, accessories and expert services.',
     url: 'https://gnaathcommunications.com',
     siteName: 'G Naath Global Communications Ltd',
     images: [

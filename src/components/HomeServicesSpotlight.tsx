@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Wrench, Sun, ArrowRight, ShieldCheck, CheckCircle2, Smartphone, Zap } from 'lucide-react';
+import { Wrench, Sun, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 export const HomeServicesSpotlight: React.FC = () => {
   return (
@@ -19,7 +19,7 @@ export const HomeServicesSpotlight: React.FC = () => {
             Expert Phone Repairs &amp; Clean Solar Energy
           </h2>
           <p className="text-slate-600 text-sm font-medium leading-relaxed">
-            In addition to original mobile technology and accessories, we operate certified phone repair labs and professional solar installation services across Lagos &amp; Abia State.
+            Alongside our growing marketplace, we operate certified phone repair labs and professional solar installation services across Lagos &amp; Abia State.
           </p>
         </div>
 

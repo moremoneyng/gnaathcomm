@@ -4,152 +4,143 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { ShoppingBag, ArrowRight, ShieldCheck, Wrench, Sun, Smartphone, Sparkles } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowRight,
+  Bike,
+  CarFront,
+  House,
+  ShieldCheck,
+  ShoppingBag,
+  Smartphone,
+  Sparkles,
+  Sun,
+  Wrench,
+} from 'lucide-react';
+
+const categories = [
+  'Smartphones',
+  'Electronics',
+  'Home Appliances',
+  'Office Equipment',
+  'Solar Energy',
+  'Gadgets',
+  'Cars',
+  'Bikes',
+  'Accessories',
+];
 
 export const HeroSection: React.FC = () => {
   const { storeConfig } = useStore();
 
   return (
-    <section className="relative overflow-hidden bg-[#f4f5f8] py-12 sm:py-20 lg:py-24 border-b border-slate-200/80">
-      {/* Background Depth Ambient Blur Orbs */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[600px] h-[350px] sm:h-[600px] bg-gradient-to-tr from-emerald-400/20 via-teal-300/20 to-cyan-400/20 rounded-full blur-[100px] sm:blur-[140px] pointer-events-none -z-0" />
-      <div className="absolute top-12 left-10 w-48 sm:w-80 h-48 sm:h-80 bg-emerald-500/15 rounded-full blur-[80px] pointer-events-none -z-0" />
-      <div className="absolute bottom-10 right-10 w-56 sm:w-96 h-56 sm:h-96 bg-cyan-500/15 rounded-full blur-[90px] pointer-events-none -z-0" />
+    <section className="relative overflow-hidden border-b border-slate-200 bg-[#f7f6f1]">
+      <div className="absolute inset-0 opacity-[0.025] [background-image:linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] [background-size:42px_42px]" />
+      <div className="absolute -right-28 -top-32 h-96 w-96 rounded-full bg-emerald-300/20 blur-3xl" />
+      <div className="absolute -bottom-44 left-1/3 h-96 w-96 rounded-full bg-amber-200/25 blur-3xl" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-        
-        {/* Bolder Headline */}
-        <h1 className="font-heading text-4xl sm:text-6xl lg:text-7xl font-black text-slate-950 tracking-tight leading-[1.08] max-w-4xl mx-auto text-balance">
-          Mobile Tech, Accessories &amp; <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 drop-shadow-xs">Solar Energy</span>
-        </h1>
+      <div className="relative mx-auto grid min-h-[660px] max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[1.03fr_0.97fr] lg:px-8 lg:py-24">
+        <div className="max-w-2xl">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-700/15 bg-white/80 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-emerald-800 shadow-sm backdrop-blur">
+            <Sparkles className="h-3.5 w-3.5" />
+            Products for modern living
+          </div>
 
-        {/* Subtitle */}
-        <p className="mt-4 sm:mt-6 text-slate-800 text-base sm:text-xl max-w-2xl mx-auto font-bold leading-relaxed px-1 sm:px-0">
-          Your authorized destination for genuine smartphones, JBL audio, fast power banks, expert phone repairs, and high-performance solar installations in Lagos &amp; Abia State.
-        </p>
+          <h1 className="font-heading text-[3.25rem] font-black leading-[0.92] tracking-[-0.055em] text-slate-950 sm:text-7xl lg:text-[5.5rem]">
+            Everything Modern.
+            <span className="mt-2 block text-emerald-700">All in One Place.</span>
+          </h1>
 
-        {/* Store Motto Badge */}
-        <div className="mt-4 sm:mt-5 inline-flex items-center px-4.5 py-2 rounded-full bg-gradient-to-r from-emerald-500/10 via-teal-500/15 to-emerald-500/10 border border-emerald-500/30 text-emerald-950 text-xs sm:text-sm font-extrabold shadow-xs backdrop-blur-xs">
-          <span>&quot;{storeConfig.motto}&quot;</span>
-        </div>
+          <p className="mt-7 max-w-xl text-base font-semibold leading-7 text-slate-700 sm:text-lg sm:leading-8">
+            Shop smartphones, electronics, home and office appliances, solar energy systems,
+            gadgets, cars, bikes and more from one trusted destination.
+          </p>
+          <p className="mt-4 max-w-xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
+            From everyday essentials to smart technology and modern mobility, G Naath brings
+            you the products that power, connect and transform modern living.
+          </p>
 
-        {/* 3 Primary Dedicated Action Pills */}
-        <div className="mt-7 sm:mt-9 grid grid-cols-3 gap-2 sm:flex sm:items-center sm:justify-center sm:gap-4 max-w-3xl mx-auto">
-          <Link
-            href="/shop"
-            className="min-w-0 inline-flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-7 py-3 sm:py-4 rounded-xl sm:rounded-full font-extrabold text-[10px] sm:text-sm bg-slate-950 hover:bg-slate-900 text-white shadow-xl hover:shadow-2xl active:scale-95 transition-all"
-          >
-            <ShoppingBag className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span className="truncate sm:hidden">Shop</span>
-            <span className="hidden sm:inline">Shop Store Catalog</span>
-          </Link>
+          <div className="mt-6 flex items-center gap-2 text-sm font-black text-slate-950">
+            <ShieldCheck className="h-4 w-4 text-emerald-700" />
+            <span>&ldquo;{storeConfig.motto}&rdquo;</span>
+          </div>
 
-          <Link
-            href="/repairs"
-            className="min-w-0 inline-flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-7 py-3 sm:py-4 rounded-xl sm:rounded-full font-extrabold text-[10px] sm:text-sm bg-white hover:bg-slate-50 text-slate-950 border border-slate-300 transition-all shadow-sm hover:shadow-md active:scale-95"
-          >
-            <Wrench className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span className="truncate sm:hidden">Repairs</span>
-            <span className="hidden sm:inline">Book Phone Repairs</span>
-            <ArrowRight className="hidden sm:block w-3.5 h-3.5 text-slate-400" />
-          </Link>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <Link href="/shop" className="inline-flex items-center justify-center gap-2.5 rounded-full bg-slate-950 px-7 py-4 text-sm font-extrabold text-white shadow-xl shadow-slate-950/15 transition hover:-translate-y-0.5 hover:bg-emerald-700">
+              <ShoppingBag className="h-4 w-4" />
+              Shop All Products
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link href="#catalog" className="inline-flex items-center justify-center gap-2.5 rounded-full border border-slate-300 bg-white px-7 py-4 text-sm font-extrabold text-slate-950 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-700 hover:text-emerald-800">
+              Explore Categories
+              <ArrowDown className="h-4 w-4" />
+            </Link>
+          </div>
 
-          <Link
-            href="/solar"
-            className="min-w-0 inline-flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-7 py-3 sm:py-4 rounded-xl sm:rounded-full font-extrabold text-[10px] sm:text-sm bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-md hover:shadow-lg transition-all active:scale-95"
-          >
-            <Sun className="w-4 h-4 text-slate-950 shrink-0" />
-            <span className="truncate sm:hidden">Solar</span>
-            <span className="hidden sm:inline">Solar Quote</span>
-            <ArrowRight className="hidden sm:block w-3.5 h-3.5 text-slate-950" />
-          </Link>
-        </div>
-
-        {/* Immersive Dark Glass Showcase Canopy */}
-        <div className="hidden sm:block mt-12 sm:mt-16 max-w-5xl mx-auto relative text-left">
-          
-          <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20 rounded-[2.5rem] sm:rounded-[3.5rem] blur-2xl opacity-75 pointer-events-none -z-10" />
-
-          <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 text-white relative overflow-hidden border border-white/15 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)]">
-            
-            <div className="absolute -top-24 -left-24 w-72 h-72 bg-emerald-500/20 rounded-full blur-[70px] pointer-events-none" />
-            <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-cyan-500/20 rounded-full blur-[80px] pointer-events-none" />
-
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-center relative z-10">
-              
-              {/* Left Column */}
-              <div className="md:col-span-7 space-y-4 sm:space-y-6">
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 tracking-wider uppercase backdrop-blur-md shadow-xs">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                  GENUINE PRODUCTS &amp; CERTIFIED SERVICES
-                </span>
-
-                <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
-                  Original Smartphones, Audio &amp; Clean Solar Power
-                </h2>
-
-                <p className="text-slate-300 text-xs sm:text-base leading-relaxed font-medium">
-                  Shop original Apple iPhones, Samsung Galaxy flagships, JBL Bluetooth speakers, Anker chargers &amp; high-efficiency solar inverter systems with official factory warranties.
-                </p>
-
-                {/* Key Pillars */}
-                <div className="pt-1 grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 text-xs sm:text-sm font-extrabold text-slate-100">
-                  <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-white/15 shadow-xs">
-                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>100% Genuine</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-white/15 shadow-xs">
-                    <Smartphone className="w-4 h-4 text-cyan-400 shrink-0" />
-                    <span>Dual Stores</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-white/15 shadow-xs col-span-2 sm:col-span-1">
-                    <Sun className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>Solar Panels</span>
-                  </div>
-                </div>
-
-                <div className="pt-2 flex items-center gap-3">
-                  <Link
-                    href="/shop"
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-xs sm:text-sm font-extrabold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all shadow-[0_10px_25px_rgba(16,185,129,0.3)] active:scale-95"
-                  >
-                    <span>Explore Full Online Catalog</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
-              </div>
-
-              {/* Right Column Image Frame */}
-              <div className="md:col-span-5 relative w-full h-60 sm:h-80 md:h-96">
-                <div className="absolute -inset-2 bg-gradient-to-tr from-emerald-500/40 via-teal-400/30 to-cyan-500/40 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-500" />
-
-                <div className="relative w-full h-full rounded-2xl sm:rounded-3xl overflow-hidden border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.6)] group">
-                  <Image
-                    src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=1000&auto=format&fit=crop&q=80"
-                    alt="Original Smartphones & Accessories Showcase"
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-700"
-                    priority
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent flex items-end p-4 sm:p-5" />
-                </div>
-
-                <div className="absolute -bottom-3 -right-2 sm:-bottom-4 sm:-right-4 bg-slate-950/90 backdrop-blur-xl px-4 py-2.5 rounded-2xl border border-emerald-500/40 shadow-2xl text-white z-20">
-                  <p className="text-[11px] sm:text-xs font-black text-emerald-400 flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    Official Warranty Included
-                  </p>
-                  <p className="text-[10px] sm:text-xs text-slate-300 font-semibold mt-0.5">
-                    Lagos Head Office &amp; ABSU Branch
-                  </p>
-                </div>
-
-              </div>
-
-            </div>
+          <div className="mt-8 flex flex-wrap gap-x-5 gap-y-3 text-xs font-bold text-slate-600">
+            <Link href="/repairs" className="inline-flex items-center gap-1.5 transition hover:text-emerald-700">
+              <Wrench className="h-3.5 w-3.5" /> Expert phone repairs
+            </Link>
+            <Link href="/solar" className="inline-flex items-center gap-1.5 transition hover:text-emerald-700">
+              <Sun className="h-3.5 w-3.5" /> Solar consultation
+            </Link>
           </div>
         </div>
 
+        <div className="relative mx-auto w-full max-w-xl lg:mx-0">
+          <div className="absolute -inset-5 rotate-2 rounded-[2.5rem] border border-emerald-900/10 bg-emerald-950/5" />
+          <div className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-slate-950 p-3 shadow-[0_35px_80px_-30px_rgba(15,23,42,0.55)] sm:rounded-[2.5rem] sm:p-4">
+            <div className="relative h-[300px] overflow-hidden rounded-[1.45rem] sm:h-[390px] sm:rounded-[2rem]">
+              <Image
+                src="https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=1400&auto=format&fit=crop&q=85"
+                alt="Modern electronics and technology available at G Naath"
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 48vw"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/15 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">The modern marketplace</p>
+                <p className="mt-2 max-w-sm text-2xl font-black leading-tight text-white sm:text-3xl">
+                  Discover what moves your life forward.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-2 pt-3 text-white sm:gap-3 sm:pt-4">
+              {[
+                { icon: Smartphone, label: 'Tech' },
+                { icon: House, label: 'Home' },
+                { icon: CarFront, label: 'Cars' },
+                { icon: Bike, label: 'Bikes' },
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="flex flex-col items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.07] px-2 py-3 text-center">
+                  <Icon className="h-4 w-4 text-emerald-300" />
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider sm:text-xs">{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="absolute -right-2 top-8 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-xl sm:-right-7 sm:top-12">
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">One destination</p>
+            <p className="mt-0.5 text-sm font-black text-slate-950">Products + Services</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative border-t border-slate-200/80 bg-white/75 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 overflow-x-auto px-4 py-4 [scrollbar-width:none] sm:px-6 lg:px-8 [&::-webkit-scrollbar]:hidden">
+          <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-700">Shop by category</span>
+          <span className="h-4 w-px shrink-0 bg-slate-300" />
+          {categories.map((category) => (
+            <Link key={category} href="#catalog" className="shrink-0 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-[11px] font-extrabold text-slate-700 transition hover:border-emerald-600 hover:text-emerald-700">
+              {category}
+            </Link>
+          ))}
+          <span className="shrink-0 text-xs font-black text-emerald-700">&amp; More</span>
+        </div>
       </div>
     </section>
   );
