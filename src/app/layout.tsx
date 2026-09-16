@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://gnaathcommunications.com'),
   title: 'G Naath Global Communications Ltd | Phones, Accessories, Repairs & Solar',
   description:
-    'G Naath Global Communications Ltd (RC: 6898302). Ultimate Satisfaction Assured! We sell mobile phones, accessories (JBL, Anker, Apple, Samsung, Oraimo), offer phone repairs, and install solar systems in Lagos & Abia State.',
+    'G Naath Global Communications Ltd (RC: 6898302). Ultimate Satisfaction Assured! We sell mobile phones and accessories from Apple, Samsung, JBL, Anker and more, offer phone repairs, and install solar systems in Lagos & Abia State.',
   keywords: [
     'G Naath Global Communications',
     'Mobile Phones Lagos',
@@ -32,7 +32,6 @@ export const metadata: Metadata = {
     'Phone Repair ABSU Uturu Abia State',
     'Solar Installation Lagos',
     'Solar Materials Sales',
-    'Oraimo Accessories',
   ],
   authors: [{ name: 'G Naath Global Communications Ltd' }],
   icons: {

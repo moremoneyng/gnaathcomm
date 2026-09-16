@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useStore } from '@/context/StoreContext';
-import { Sparkles, ShieldCheck } from 'lucide-react';
+import styles from './BrandMarquee.module.css';
 
 export const BrandMarquee: React.FC = () => {
   const { storeConfig, setSelectedCategory, setSearchQuery } = useStore();
@@ -16,34 +16,32 @@ export const BrandMarquee: React.FC = () => {
     }
   };
 
-  return (
-    <section className="py-6 bg-[#08080c] border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-              Authorized Brands
-            </h3>
-          </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Original Products with Official Factory Warranties</span>
-          </div>
-        </div>
+  const renderBrand = (brand: string, duplicate = false) => (
+    <li key={`${duplicate ? 'duplicate-' : ''}${brand}`}>
+      <button
+        onClick={() => handleBrandClick(brand)}
+        className="shrink-0 whitespace-nowrap rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+        title={`View ${brand} products`}
+        tabIndex={duplicate ? -1 : undefined}
+      >
+        {brand}
+      </button>
+    </li>
+  );
 
-        {/* Minimal Brand Pills Grid */}
-        <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {storeConfig.brands.map((brand) => (
-            <button
-              key={brand}
-              onClick={() => handleBrandClick(brand)}
-              className="px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-400/40 text-xs font-medium text-slate-300 hover:text-white transition-all whitespace-nowrap shrink-0"
-              title={`View ${brand} products`}
-            >
-              {brand}
-            </button>
-          ))}
+  return (
+    <section
+      className="border-y border-slate-200 bg-gradient-to-r from-slate-50 via-white to-slate-50 py-6"
+      aria-label="Product brands"
+    >
+      <div className={styles.viewport}>
+        <div className={styles.track}>
+          <ul className={styles.group}>
+            {storeConfig.brands.map((brand) => renderBrand(brand))}
+          </ul>
+          <ul className={`${styles.group} ${styles.duplicate}`} aria-hidden="true">
+            {storeConfig.brands.map((brand) => renderBrand(brand, true))}
+          </ul>
         </div>
       </div>
     </section>

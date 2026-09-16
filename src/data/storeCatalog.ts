@@ -19,7 +19,7 @@ export const DEFAULT_STORE_CONFIG: StoreConfig = {
   branchOfficeLandmark: 'Opposite Borehole/Bubbles Bar Upgate, ABSU',
   businessHours: 'Mon - Sat: 8:00 AM - 8:00 PM',
   logoUrl: '/gnaathcommlogo.png',
-  brands: ['Apple', 'Samsung', 'JBL', 'Anker', 'Green Lion', 'Bose', 'Porodo', 'Lepresso', 'Romoss', 'Marshall', 'Oraimo', 'New Age'],
+  brands: ['Apple', 'Samsung', 'JBL', 'Anker', 'Green Lion', 'Bose', 'Porodo', 'Lepresso', 'Romoss', 'Marshall', 'New Age'],
 };
 
 export const CATEGORIES: Category[] = [
@@ -55,7 +55,7 @@ export const CATEGORIES: Category[] = [
     name: 'Audio & Speakers',
     slug: 'audio',
     iconName: 'Headphones',
-    description: 'JBL, Bose, Anker, Marshall & Oraimo headphones & Bluetooth speakers.',
+    description: 'JBL, Bose, Anker & Marshall headphones and Bluetooth speakers.',
     itemCount: 0,
     image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80',
   },
