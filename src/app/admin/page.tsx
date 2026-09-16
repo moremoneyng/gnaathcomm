@@ -36,6 +36,7 @@ import {
   Mail,
   Building2,
   Store,
+  ChevronDown,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -883,7 +884,54 @@ export default function AdminPage() {
               </div>
 
               {/* Data Table */}
-              <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs">
+              <div className="sm:hidden space-y-3">
+                {filteredProductsList.length > 0 ? (
+                  filteredProductsList.map((p) => (
+                    <details key={p.id} className="group bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                      <summary className="flex items-center gap-3 p-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                        <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-white border border-slate-200 shrink-0">
+                          <Image src={p.image} alt={p.name} fill className="object-contain p-1" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-extrabold text-slate-950 truncate">{p.name}</p>
+                          <p className="text-xs text-slate-500 truncate">{p.brand || 'G Naath Premium'}</p>
+                          <p className="mt-1 text-sm font-black text-emerald-700">{storeConfig.currencySymbol}{p.price.toLocaleString()}</p>
+                        </div>
+                        <ChevronDown className="w-5 h-5 text-slate-400 transition-transform group-open:rotate-180" />
+                      </summary>
+                      <div className="border-t border-slate-100 px-4 pb-4 pt-3 space-y-3 text-sm">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Category</span>
+                            <span className="inline-block mt-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-200 font-mono text-[10px] font-bold">{p.category}</span>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Stock</span>
+                            <span className={`inline-flex items-center gap-1 mt-1 text-xs font-bold ${p.inStock ? 'text-emerald-700' : 'text-rose-700'}`}>
+                              {p.inStock ? <CheckCircle className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
+                              {p.inStock ? 'In Stock' : 'Out of Stock'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 pt-1">
+                          <button onClick={() => handleOpenEdit(p)} className="flex-1 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center gap-2" title="Edit Product">
+                            <Edit3 className="w-4 h-4" /> Edit
+                          </button>
+                          <button onClick={() => handleDeleteProduct(p.id, p.name)} className="flex-1 py-2.5 rounded-xl bg-rose-50 text-rose-600 font-bold text-xs flex items-center justify-center gap-2" title="Delete Product">
+                            <Trash2 className="w-4 h-4" /> Delete
+                          </button>
+                        </div>
+                      </div>
+                    </details>
+                  ))
+                ) : (
+                  <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center text-sm text-slate-500">
+                    No products match this filter. Tap <span className="font-bold text-emerald-700">New Product</span> to add one.
+                  </div>
+                )}
+              </div>
+
+              <div className="hidden sm:block bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs text-slate-700">
                     <thead className="bg-slate-50 text-slate-950 font-bold border-b border-slate-200 uppercase tracking-wider text-[11px]">

@@ -4,7 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { ShoppingBag, ArrowRight, ShieldCheck, Wrench, Sun, Smartphone, CheckCircle2, Sparkles } from 'lucide-react';
+import { ShoppingBag, ArrowRight, ShieldCheck, Wrench, Sun, Smartphone, Sparkles } from 'lucide-react';
 
 export const HeroSection: React.FC = () => {
   const { storeConfig } = useStore();
@@ -18,12 +18,6 @@ export const HeroSection: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
         
-        {/* Sleek Brand Tag */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-slate-200/90 text-slate-800 text-xs font-bold shadow-xs mb-4 sm:mb-6">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-          <span>G NAATH GLOBAL COMMUNICATIONS LTD • {storeConfig.rcNumber}</span>
-        </div>
-
         {/* Bolder Headline */}
         <h1 className="font-heading text-4xl sm:text-6xl lg:text-7xl font-black text-slate-950 tracking-tight leading-[1.08] max-w-4xl mx-auto text-balance">
           Mobile Tech, Accessories &amp; <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 drop-shadow-xs">Solar Energy</span>
@@ -40,31 +34,34 @@ export const HeroSection: React.FC = () => {
         </div>
 
         {/* 3 Primary Dedicated Action Pills */}
-        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 max-w-sm sm:max-w-none mx-auto">
+        <div className="mt-7 sm:mt-9 grid grid-cols-3 gap-2 sm:flex sm:items-center sm:justify-center sm:gap-4 max-w-3xl mx-auto">
           <Link
             href="/shop"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3.5 sm:py-4 rounded-2xl sm:rounded-full font-extrabold text-xs sm:text-sm bg-slate-950 hover:bg-slate-900 text-white shadow-xl hover:shadow-2xl active:scale-95 transition-all whitespace-nowrap"
+            className="min-w-0 inline-flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-7 py-3 sm:py-4 rounded-xl sm:rounded-full font-extrabold text-[10px] sm:text-sm bg-slate-950 hover:bg-slate-900 text-white shadow-xl hover:shadow-2xl active:scale-95 transition-all"
           >
-            <ShoppingBag className="w-4 h-4 text-emerald-400" />
-            <span>Shop Store Catalog</span>
+            <ShoppingBag className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="truncate sm:hidden">Shop</span>
+            <span className="hidden sm:inline">Shop Store Catalog</span>
           </Link>
 
           <Link
             href="/repairs"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3.5 sm:py-4 rounded-2xl sm:rounded-full font-extrabold text-xs sm:text-sm bg-white hover:bg-slate-50 text-slate-950 border border-slate-300 transition-all shadow-sm hover:shadow-md active:scale-95 whitespace-nowrap"
+            className="min-w-0 inline-flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-7 py-3 sm:py-4 rounded-xl sm:rounded-full font-extrabold text-[10px] sm:text-sm bg-white hover:bg-slate-50 text-slate-950 border border-slate-300 transition-all shadow-sm hover:shadow-md active:scale-95"
           >
-            <Wrench className="w-4 h-4 text-emerald-600" />
-            <span>Book Phone Repairs</span>
-            <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+            <Wrench className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="truncate sm:hidden">Repairs</span>
+            <span className="hidden sm:inline">Book Phone Repairs</span>
+            <ArrowRight className="hidden sm:block w-3.5 h-3.5 text-slate-400" />
           </Link>
 
           <Link
             href="/solar"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3.5 sm:py-4 rounded-2xl sm:rounded-full font-extrabold text-xs sm:text-sm bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-md hover:shadow-lg transition-all active:scale-95 whitespace-nowrap"
+            className="min-w-0 inline-flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-7 py-3 sm:py-4 rounded-xl sm:rounded-full font-extrabold text-[10px] sm:text-sm bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-md hover:shadow-lg transition-all active:scale-95"
           >
-            <Sun className="w-4 h-4 text-slate-950" />
-            <span>Solar Quote</span>
-            <ArrowRight className="w-3.5 h-3.5 text-slate-950" />
+            <Sun className="w-4 h-4 text-slate-950 shrink-0" />
+            <span className="truncate sm:hidden">Solar</span>
+            <span className="hidden sm:inline">Solar Quote</span>
+            <ArrowRight className="hidden sm:block w-3.5 h-3.5 text-slate-950" />
           </Link>
         </div>
 
