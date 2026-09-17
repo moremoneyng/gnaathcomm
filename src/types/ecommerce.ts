@@ -47,7 +47,7 @@ export interface CustomerDetails {
   city: string;
   preferredBranch: 'lagos_head_office' | 'abia_branch_office';
   deliveryNotes?: string;
-  paymentPreference: 'cash_on_delivery' | 'bank_transfer' | 'whatsapp_discuss';
+  paymentPreference: 'flutterwave';
 }
 
 export interface StoreConfig {

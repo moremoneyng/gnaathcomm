@@ -10,7 +10,19 @@ pnpm dev
 
 Required deployment variables include `DATABASE_URL`, `DIRECT_URL`, `USER_JWT_SECRET`,
 `ADMIN_JWT_SECRET`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`,
-`CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`.
+`CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `NEXT_PUBLIC_APP_URL`,
+`NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY`, `FLUTTERWAVE_SECRET_KEY`,
+`FLUTTERWAVE_ENCRYPTION_KEY`, and `FLUTTERWAVE_WEBHOOK_SECRET`.
+
+Flutterwave must send webhooks to:
+
+```text
+https://www.gnaathglobalcomm.ng/api/webhooks/flutterwave
+```
+
+Set the Flutterwave webhook secret hash to the same value as
+`FLUTTERWAVE_WEBHOOK_SECRET`. Orders remain unpaid until the server verifies the
+transaction ID, reference, currency, and amount directly with Flutterwave.
 
 Build and start production locally with:
 

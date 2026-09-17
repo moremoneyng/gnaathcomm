@@ -1045,6 +1045,14 @@ export default function AdminPage() {
                           <p className="text-xs text-slate-600 mt-0.5">
                             Fulfillment Branch: <span className="font-bold text-slate-900">{o.preferredBranch === 'abia_branch_office' ? 'Abia State ABSU Branch' : 'Lagos Head Office'}</span> • Delivery Address: {o.customerAddress || 'Store Pickup'}
                           </p>
+                          <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-bold">
+                            <span className={`rounded-full px-2.5 py-1 ${o.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                              Payment: {o.paymentStatus}
+                            </span>
+                            {o.paymentReference && <span className="rounded-full bg-slate-100 px-2.5 py-1 font-mono text-slate-600">{o.paymentReference}</span>}
+                            {o.flutterwaveTransactionId && <span className="rounded-full bg-sky-50 px-2.5 py-1 font-mono text-sky-700">FLW #{o.flutterwaveTransactionId}</span>}
+                            {o.paidAt && <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-600">Paid {new Date(o.paidAt).toLocaleString()}</span>}
+                          </div>
                         </div>
 
                         <div className="flex items-center gap-4">

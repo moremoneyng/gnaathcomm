@@ -43,13 +43,7 @@ export function generateCartWhatsAppUrl(
   message += `• *Phone:* ${customer.phone || 'Not provided'}\n`;
   message += `• *Fulfillment Branch:* ${branchText}\n`;
   message += `• *Delivery Address:* ${customer.address || 'Pickup at branch'}${customer.city ? `, ${customer.city}` : ''}\n`;
-  message += `• *Payment Method:* ${
-    customer.paymentPreference === 'cash_on_delivery'
-      ? '💵 Cash on Delivery / Pickup'
-      : customer.paymentPreference === 'bank_transfer'
-      ? '🏦 Direct Bank Transfer'
-      : '💬 Discuss via WhatsApp'
-  }\n`;
+  message += `• *Payment Method:* 🔒 Flutterwave secure checkout\n`;
 
   if (customer.deliveryNotes) {
     message += `• *Notes:* ${customer.deliveryNotes}\n`;
@@ -74,7 +68,7 @@ export function generateCartWhatsAppUrl(
   message += `━━━━━━━━━━━━━━━━━━━━━\n`;
   message += `💰 *TOTAL AMOUNT:* *${formatCurrency(totalAmount, config.currencySymbol)}*\n`;
   message += `⏰ *Order Time:* ${new Date().toLocaleString()}\n\n`;
-  message += `Please confirm my order availability and payment details. Thank you! 🙏`;
+  message += `Please help me with this paid order. Thank you! 🙏`;
 
   const encodedMessage = encodeURIComponent(message);
   return `https://wa.me/${cleanPhone}?text=${encodedMessage}`;

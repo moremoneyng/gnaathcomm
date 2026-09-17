@@ -24,7 +24,6 @@ interface StoreContextType {
   products: Product[];
   isLoadingProducts: boolean;
   refreshProducts: () => Promise<void>;
-  submitOrder: () => Promise<{ success: boolean; orderNumber?: string; error?: string }>;
 
   // Config & Details
   config: StoreConfig;
@@ -97,7 +96,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     city: 'Lagos',
     preferredBranch: 'lagos_head_office',
     deliveryNotes: '',
-    paymentPreference: 'cash_on_delivery',
+    paymentPreference: 'flutterwave',
   });
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -165,30 +164,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     refreshProducts();
   }, []);
-
-  // Submit order to PostgreSQL database
-  const submitOrder = async (): Promise<{ success: boolean; orderNumber?: string; error?: string }> => {
-    try {
-      const cartSubtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerDetails,
-          cart,
-          totalAmount: cartSubtotal,
-        }),
-      });
-      const data = await res.json();
-      if (data.success && data.order) {
-        clearCart();
-        return { success: true, orderNumber: data.order.orderNumber };
-      }
-      return { success: false, error: data.error || 'Failed to submit order' };
-    } catch (err: any) {
-      return { success: false, error: err.message || 'Network error' };
-    }
-  };
 
   // Load saved state from localStorage on mount
   useEffect(() => {
@@ -312,7 +287,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         products,
         isLoadingProducts,
         refreshProducts,
-        submitOrder,
         config,
         storeConfig: config,
         updateConfig,

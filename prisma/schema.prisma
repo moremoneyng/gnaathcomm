@@ -95,6 +95,11 @@ model Order {
   deliveryNotes     String?
   paymentPreference String      @default("whatsapp_discuss")
   paymentStatus     String      @default("PENDING")
+  paymentReference  String?     @unique
+  flutterwaveTransactionId String? @unique
+  paymentMethod     String?
+  paidAt            DateTime?
+  paymentFailureReason String?
   orderStatus       String      @default("PENDING")
   totalAmount       Float
   createdAt         DateTime    @default(now())
@@ -197,4 +202,3 @@ model AdminUser {
 
   @@map("admin_users")
 }
-
