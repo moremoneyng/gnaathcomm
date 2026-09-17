@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useStore } from '@/context/StoreContext';
-import styles from './BrandMarquee.module.css';
 
 export const BrandMarquee: React.FC = () => {
   const { storeConfig, setSelectedCategory, setSearchQuery } = useStore();
@@ -34,12 +33,12 @@ export const BrandMarquee: React.FC = () => {
       className="border-y border-slate-200 bg-gradient-to-r from-slate-50 via-white to-slate-50 py-6"
       aria-label="Product brands"
     >
-      <div className={styles.viewport}>
-        <div className={styles.track}>
-          <ul className={styles.group}>
+      <div className="marquee-viewport">
+        <div className="marquee-track">
+          <ul className="marquee-group">
             {storeConfig.brands.map((brand) => renderBrand(brand))}
           </ul>
-          <ul className={`${styles.group} ${styles.duplicate}`} aria-hidden="true">
+          <ul className="marquee-group marquee-duplicate" aria-hidden="true">
             {storeConfig.brands.map((brand) => renderBrand(brand, true))}
           </ul>
         </div>

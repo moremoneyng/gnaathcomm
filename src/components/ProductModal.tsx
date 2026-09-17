@@ -1,51 +1,46 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useStore } from '@/context/StoreContext';
+import { Product } from '@/types/ecommerce';
 import {
   X,
   Star,
   ShoppingBag,
-  MessageSquare,
+  LockKeyhole,
   Plus,
   Minus,
-  Check,
   ShieldCheck,
   Truck,
   RotateCcw,
 } from 'lucide-react';
-import { formatCurrency, generateSingleProductWhatsAppUrl } from '@/utils/whatsapp';
+import { formatCurrency } from '@/utils/whatsapp';
 
-export function ProductModal() {
-  const { activeProductModal, closeProductModal, storeConfig, addToCart } = useStore();
+interface ProductModalDialogProps {
+  product: Product;
+  onClose: () => void;
+}
 
-  const product = activeProductModal;
+function ProductModalDialog({ product, onClose }: ProductModalDialogProps) {
+  const router = useRouter();
+  const { storeConfig, addToCart } = useStore();
 
-  const [selectedImage, setSelectedImage] = useState('');
+  const [selectedImage, setSelectedImage] = useState(product.image);
   const [quantity, setQuantity] = useState(1);
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
-  const [customNote, setCustomNote] = useState('');
-
-  useEffect(() => {
-    if (product) {
-      setSelectedImage(product.image);
-      setQuantity(1);
-      setCustomNote('');
-
-      const defaultOpts: Record<string, string> = {};
-      if (product.options) {
-        product.options.forEach((opt) => {
-          if (opt.values.length > 0) {
-            defaultOpts[opt.name] = opt.values[0];
-          }
-        });
-      }
-      setSelectedOptions(defaultOpts);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(() => {
+    const defaultOpts: Record<string, string> = {};
+    if (product.options) {
+      product.options.forEach((opt) => {
+        if (opt.values.length > 0) {
+          defaultOpts[opt.name] = opt.values[0];
+        }
+      });
     }
-  }, [product]);
-
-  if (!product) return null;
+    return defaultOpts;
+  });
+  const [customNote, setCustomNote] = useState('');
 
   const allImages = [product.image, ...(product.images || [])];
 
@@ -58,18 +53,13 @@ export function ProductModal() {
 
   const handleAddToCart = () => {
     addToCart(product, quantity, selectedOptions);
-    closeProductModal();
+    onClose();
   };
 
-  const handleDirectWhatsAppOrder = () => {
-    const url = generateSingleProductWhatsAppUrl(
-      product,
-      storeConfig,
-      quantity,
-      selectedOptions,
-      customNote
-    );
-    window.open(url, '_blank');
+  const handleOrderNow = () => {
+    addToCart(product, quantity, selectedOptions);
+    onClose();
+    router.push('/checkout');
   };
 
   return (
@@ -80,7 +70,7 @@ export function ProductModal() {
       >
         {/* Close Button */}
         <button
-          onClick={closeProductModal}
+          onClick={onClose}
           className="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition-all"
         >
           <X className="w-5 h-5" />
@@ -248,11 +238,11 @@ export function ProductModal() {
               </button>
 
               <button
-                onClick={handleDirectWhatsAppOrder}
+                onClick={handleOrderNow}
                 className="py-3 px-4 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition-colors flex items-center justify-center gap-2 shadow-md"
               >
-                <MessageSquare className="w-4 h-4" />
-                <span>Order via WhatsApp</span>
+                <LockKeyhole className="w-4 h-4" />
+                <span>Order Now</span>
               </button>
             </div>
           </div>
@@ -261,6 +251,12 @@ export function ProductModal() {
       </div>
     </div>
   );
+}
+
+export function ProductModal() {
+  const { activeProductModal, closeProductModal } = useStore();
+  if (!activeProductModal) return null;
+  return <ProductModalDialog key={activeProductModal.id} product={activeProductModal} onClose={closeProductModal} />;
 }
 
 export default ProductModal;

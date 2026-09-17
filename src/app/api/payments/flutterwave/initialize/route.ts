@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       createOrder: (input) => prisma.order.create({
         data: {
           orderNumber: input.orderNumber,
-          userId: input.userId || null,
+          ...(input.userId ? { user: { connect: { id: input.userId } } } : {}),
           customerName: input.customer.name,
           customerEmail: input.customer.email,
           customerPhone: input.customer.phone,

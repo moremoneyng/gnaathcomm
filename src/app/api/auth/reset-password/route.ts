@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { resetMemoryStore } from '../forgot-password/route';
+import { resetMemoryStore } from '@/lib/resetMemoryStore';
 
 export async function POST(request: Request) {
   try {
@@ -30,8 +30,8 @@ export async function POST(request: Request) {
         isMatch = true;
         await prisma.otpVerification.delete({ where: { id: otpRecord.id } });
       }
-    } catch (dbErr: any) {
-      console.warn('DB error during reset password OTP check:', dbErr?.message);
+    } catch (dbErr: unknown) {
+      console.warn('DB error during reset password OTP check:', dbErr instanceof Error ? dbErr.message : String(dbErr));
     }
 
     if (!isMatch) {
@@ -53,16 +53,17 @@ export async function POST(request: Request) {
         where: { email: trimmedEmail },
         data: { password: hashedPassword, isVerified: true },
       });
-    } catch (dbErr: any) {
-      console.warn('DB password update fallback:', dbErr?.message);
+    } catch (dbErr: unknown) {
+      console.warn('DB password update fallback:', dbErr instanceof Error ? dbErr.message : String(dbErr));
     }
 
     return NextResponse.json({
       success: true,
       message: 'Password reset successful! You can now sign in with your new password.',
     });
-  } catch (error: any) {
-    console.error('Reset password API error:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Reset password failed' }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Reset password failed';
+    console.error('Reset password API error:', message);
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

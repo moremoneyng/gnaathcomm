@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendOtpEmail } from '@/lib/email';
-
-const resetMemoryStore = new Map<string, { code: string; expiresAt: number }>();
+import { resetMemoryStore } from '@/lib/resetMemoryStore';
 
 export async function POST(request: Request) {
   try {
@@ -35,8 +34,8 @@ export async function POST(request: Request) {
           expiresAt,
         },
       });
-    } catch (dbErr: any) {
-      console.warn('DB error during forgot password, using memory store:', dbErr?.message);
+    } catch (dbErr: unknown) {
+      console.warn('DB error during forgot password, using memory store:', dbErr instanceof Error ? dbErr.message : String(dbErr));
     }
 
     resetMemoryStore.set(trimmedEmail, { code: otpCode, expiresAt: expiresAt.getTime() });
@@ -52,10 +51,9 @@ export async function POST(request: Request) {
       message: `Password reset OTP code sent to ${trimmedEmail}`,
       email: trimmedEmail,
     });
-  } catch (error: any) {
-    console.error('Forgot password API error:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Forgot password failed' }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Forgot password failed';
+    console.error('Forgot password API error:', message);
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
-
-export { resetMemoryStore };

@@ -2,16 +2,18 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Product } from '@/types/ecommerce';
 import { useStore } from '@/context/StoreContext';
-import { formatCurrency, generateSingleProductWhatsAppUrl } from '@/utils/whatsapp';
-import { Star, Heart, ShoppingBag, Eye, MessageSquare } from 'lucide-react';
+import { formatCurrency } from '@/utils/whatsapp';
+import { Star, Heart, ShoppingBag, Eye, LockKeyhole } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const router = useRouter();
   const { storeConfig, addToCart, isInWishlist, toggleWishlist, openProductModal } = useStore();
 
   const isLiked = isInWishlist(product.id);
@@ -20,10 +22,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
-  const handleDirectWhatsAppOrder = (e: React.MouseEvent) => {
+  const handleOrderNow = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const url = generateSingleProductWhatsAppUrl(product, storeConfig);
-    window.open(url, '_blank');
+    if (product.options && product.options.length > 0) {
+      openProductModal(product);
+      return;
+    }
+    addToCart(product, 1);
+    router.push('/checkout');
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -134,10 +140,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </button>
 
           <button
-            onClick={handleDirectWhatsAppOrder}
+            onClick={handleOrderNow}
             className="py-1.5 sm:py-2.5 px-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] sm:text-xs transition-colors flex items-center justify-center gap-1 shadow-sm"
+            title="Order now with secure Flutterwave checkout"
           >
-            <MessageSquare className="w-3 h-3 shrink-0" />
+            <LockKeyhole className="w-3 h-3 shrink-0" />
             <span className="truncate">Order</span>
           </button>
         </div>
