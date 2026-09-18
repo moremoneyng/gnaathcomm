@@ -1346,6 +1346,51 @@ export default function AdminPage() {
                   </button>
                 </div>
               </form>
+
+              <section className="border-t border-slate-200 pt-6" aria-labelledby="category-management-heading">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h4 id="category-management-heading" className="flex items-center gap-2 text-sm font-extrabold text-slate-950">
+                      <Layers className="h-4 w-4 text-emerald-600" />
+                      Category Management
+                    </h4>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Delete empty categories from here. Categories with products are protected.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsCategoryModalOpen(true)}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2.5 text-xs font-extrabold text-white shadow-sm transition-colors hover:bg-emerald-500"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Add Category
+                  </button>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {categories.map((category) => (
+                    <div key={category.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-bold text-slate-900">{category.name}</p>
+                        <p className="mt-0.5 text-[10px] text-slate-500">
+                          {category.itemCount} product{category.itemCount === 1 ? '' : 's'}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCategory(category.id, category.name, category.itemCount)}
+                        disabled={category.itemCount > 0}
+                        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-2.5 py-2 text-[10px] font-bold text-rose-600 transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-35"
+                        title={category.itemCount > 0 ? 'Delete or move products first' : `Delete ${category.name}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </section>
             </div>
           )}
         </main>
