@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { AnnouncementBar } from '@/components/AnnouncementBar';
 import { HeroSection } from '@/components/HeroSection';
 import { CategoryBar } from '@/components/CategoryBar';
 import { ProductGrid } from '@/components/ProductGrid';
@@ -17,11 +16,6 @@ import { ArrowRight, ShoppingBag } from 'lucide-react';
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-900 selection:bg-emerald-500 selection:text-white">
-      {/* Top Announcement Bar */}
-      <AnnouncementBar />
-
-      {/* Glassmorphism Header */}
-
       {/* Main Content Area */}
       <main className="flex-grow">
         {/* Revamped Hero Section */}
