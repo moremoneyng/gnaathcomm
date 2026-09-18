@@ -51,12 +51,12 @@ export function CategoryBar() {
       <div className="grid grid-cols-5 gap-1.5 sm:gap-2 lg:grid-cols-8 lg:gap-3">
         {categories.map((category) => {
           const IconComponent = ICON_MAP[category.iconName] || LayoutGrid;
-          const isSelected = selectedCategory === category.id;
+          const isSelected = selectedCategory === category.slug;
 
           return (
             <button
               key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
+              onClick={() => setSelectedCategory(category.slug)}
               className={`relative flex h-24 flex-col justify-between overflow-hidden rounded-lg border p-1.5 transition-all text-left group sm:h-32 sm:rounded-xl sm:p-2 lg:h-36 ${
                 isSelected
                   ? 'bg-slate-950 text-white border-slate-900 shadow-lg ring-2 ring-emerald-500/30 scale-[1.02]'

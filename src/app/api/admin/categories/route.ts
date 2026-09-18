@@ -72,3 +72,41 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const session = await getAdminSession();
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Unauthorized admin access' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'Category ID required' }, { status: 400 });
+    }
+
+    const category = await prisma.category.findUnique({
+      where: { id },
+      include: { _count: { select: { products: true } } },
+    });
+
+    if (!category) {
+      return NextResponse.json({ success: false, error: 'Category not found' }, { status: 404 });
+    }
+
+    if (category._count.products > 0) {
+      return NextResponse.json(
+        { success: false, error: `Remove the ${category._count.products} product(s) in this category before deleting it.` },
+        { status: 409 }
+      );
+    }
+
+    await prisma.category.delete({ where: { id } });
+    return NextResponse.json({ success: true, message: 'Category deleted successfully' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to delete category.';
+    console.error('Category deletion error:', error);
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
+  }
+}

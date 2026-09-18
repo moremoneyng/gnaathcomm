@@ -36,7 +36,7 @@ export function ProductGrid() {
     });
   }, [products, selectedCategory, searchQuery, sortBy]);
 
-  const activeCategory = CATEGORIES.find((c) => c.id === selectedCategory);
+  const activeCategory = CATEGORIES.find((c) => c.slug === selectedCategory);
 
   return (
     <div className="space-y-6">

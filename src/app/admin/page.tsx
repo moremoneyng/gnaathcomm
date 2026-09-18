@@ -289,6 +289,24 @@ export default function AdminPage() {
     }
   };
 
+  const handleDeleteCategory = async (id: string, name: string, productCount: number) => {
+    if (productCount > 0) {
+      showToast('Delete or move the products in this category first.', 'error');
+      return;
+    }
+    if (!confirm(`Delete the empty category "${name}"?`)) return;
+
+    try {
+      const res = await fetch(`/api/admin/categories?id=${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to delete category');
+      await fetchCategories();
+      showToast('Category deleted successfully', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Failed to delete category', 'error');
+    }
+  };
+
   const handleOpenEdit = (p: any) => {
     setEditingProduct(p);
     setProductName(p.name);
@@ -1523,6 +1541,28 @@ export default function AdminPage() {
                 rows={3}
                 className="w-full px-3.5 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-emerald-600"
               />
+            </div>
+            <div className="space-y-2 border-t border-slate-100 pt-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Existing categories</p>
+              <div className="max-h-40 space-y-2 overflow-y-auto">
+                {categories.map((category) => (
+                  <div key={category.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-bold text-slate-800">{category.name}</p>
+                      <p className="text-[10px] text-slate-500">{category.itemCount} product{category.itemCount === 1 ? '' : 's'}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCategory(category.id, category.name, category.itemCount)}
+                      disabled={category.itemCount > 0}
+                      className="shrink-0 rounded-lg p-2 text-rose-600 transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-30"
+                      title={category.itemCount > 0 ? 'Remove products before deleting this category' : 'Delete category'}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="flex gap-3 pt-2">
               <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="w-1/2 py-3 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm">Cancel</button>
