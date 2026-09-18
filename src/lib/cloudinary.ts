@@ -12,20 +12,22 @@ cloudinary.config({
  */
 export async function uploadToCloudinary(
   fileString: string,
-  folder = 'gnaath_communications'
+  folder = 'gnaath_communications',
+  resourceType: 'auto' | 'image' | 'video' | 'raw' = 'auto'
 ): Promise<{ secure_url: string; public_id: string }> {
   try {
     const result = await cloudinary.uploader.upload(fileString, {
       folder,
-      resource_type: 'auto',
+      resource_type: resourceType,
     });
     return {
       secure_url: result.secure_url,
       public_id: result.public_id,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Cloudinary upload error:', error);
-    throw new Error(`Cloudinary upload failed: ${error.message}`);
+    const message = error instanceof Error ? error.message : 'Unknown Cloudinary error';
+    throw new Error(`Cloudinary upload failed: ${message}`);
   }
 }
 

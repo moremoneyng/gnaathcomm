@@ -94,7 +94,7 @@ export const Navbar: React.FC = () => {
           <Link href="/" className="flex items-center group shrink-0 py-1">
             <div className="relative w-14 h-14 sm:w-16 sm:h-16">
               <Image
-                src={storeConfig.logoUrl || '/gnaathcommlogo.png'}
+                src={storeConfig.logoUrl || '/gnaathlogo-header.png'}
                 alt={storeConfig.storeName}
                 width={64}
                 height={64}
@@ -129,17 +129,8 @@ export const Navbar: React.FC = () => {
             </Link>
 
             <Link
-              href="/shop?category=smartphones"
-              className={`hover:text-emerald-600 font-bold transition-colors py-1.5 ${
-                pathname === '/shop' ? 'text-slate-900' : ''
-              }`}
-            >
-              Smartphones
-            </Link>
-
-            <Link
               href="/repairs"
-              className={`hover:text-emerald-600 font-bold transition-colors py-1.5 ${
+              className={`inline-flex items-center gap-1.5 hover:text-emerald-600 font-bold transition-colors py-1.5 ${
                 pathname === '/repairs' ? 'text-emerald-600 font-black' : ''
               }`}
             >
@@ -148,7 +139,7 @@ export const Navbar: React.FC = () => {
 
             <Link
               href="/solar"
-              className={`hover:text-emerald-600 font-bold transition-colors py-1.5 ${
+              className={`inline-flex items-center gap-1.5 hover:text-emerald-600 font-bold transition-colors py-1.5 ${
                 pathname === '/solar' ? 'text-emerald-600 font-black' : ''
               }`}
             >

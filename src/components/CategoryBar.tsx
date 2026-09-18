@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useStore } from '@/context/StoreContext';
 import { CATEGORIES as DEFAULT_CATEGORIES } from '@/data/storeCatalog';
 import { LayoutGrid, Smartphone, Plug, Headphones, Video, Sun } from 'lucide-react';
@@ -46,8 +47,8 @@ export function CategoryBar() {
         </div>
       </div>
 
-      {/* Organized 3-Column Square Box Grid */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
+      {/* Five columns on phones, expanding to eight on large screens. */}
+      <div className="grid grid-cols-5 gap-1.5 sm:gap-2 lg:grid-cols-8 lg:gap-3">
         {categories.map((category) => {
           const IconComponent = ICON_MAP[category.iconName] || LayoutGrid;
           const isSelected = selectedCategory === category.id;
@@ -56,25 +57,36 @@ export function CategoryBar() {
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
-              className={`flex flex-col justify-between p-3 sm:p-3.5 rounded-2xl border transition-all text-left group aspect-square relative ${
+              className={`relative flex h-24 flex-col justify-between overflow-hidden rounded-lg border p-1.5 transition-all text-left group sm:h-32 sm:rounded-xl sm:p-2 lg:h-36 ${
                 isSelected
                   ? 'bg-slate-950 text-white border-slate-900 shadow-lg ring-2 ring-emerald-500/30 scale-[1.02]'
-                  : 'bg-[#f5f5f7] text-slate-800 border-slate-200/90 hover:border-slate-300 hover:bg-slate-200'
+                  : 'bg-slate-100 text-slate-800 border-slate-200/90 hover:border-emerald-300 hover:shadow-md'
               }`}
             >
+              {category.image && (
+                <Image
+                  src={category.image}
+                  alt=""
+                  fill
+                  sizes="(max-width: 1024px) 20vw, 160px"
+                  className={`object-cover transition-transform duration-500 group-hover:scale-105 ${isSelected ? 'opacity-55' : 'opacity-45'}`}
+                />
+              )}
+              <div className={`absolute inset-0 ${isSelected ? 'bg-slate-950/45' : 'bg-slate-950/15'}`} />
+
               {/* Top Row: Icon + Count Badge */}
-              <div className="flex items-center justify-between w-full">
+              <div className="relative z-10 flex w-full items-center justify-between">
                 <div
-                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center transition-colors ${
+                  className={`flex h-5 w-5 items-center justify-center rounded-md transition-colors sm:h-7 sm:w-7 sm:rounded-lg ${
                     isSelected
                       ? 'bg-emerald-500/20 text-emerald-400'
                       : 'bg-white text-emerald-600 shadow-sm border border-slate-200/60'
                   }`}
                 >
-                  <IconComponent className="w-4 h-4" />
+                  <IconComponent className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 </div>
                 <span
-                  className={`text-[10px] font-black px-1.5 py-0.5 rounded-md font-mono ${
+                  className={`rounded-md px-1 py-0.5 text-[8px] font-black font-mono sm:text-[9px] ${
                     isSelected
                       ? 'bg-white/20 text-white'
                       : 'bg-slate-200 text-slate-700'
@@ -85,9 +97,9 @@ export function CategoryBar() {
               </div>
 
               {/* Bottom Row: Category Name */}
-              <div className="mt-2">
+              <div className="relative z-10 mt-2">
                 <span
-                  className={`block text-[11px] sm:text-xs font-bold leading-tight ${
+                  className={`block text-[8px] font-bold leading-[1.05] sm:text-[10px] ${
                     isSelected ? 'text-white' : 'text-slate-900'
                   }`}
                 >

@@ -18,14 +18,14 @@ export async function POST(request: Request) {
 
       if (file.size > MAX_UPLOAD_BYTES) {
         return NextResponse.json(
-          { success: false, error: 'Image is too large. Please choose an image under 10 MB.' },
+          { success: false, error: 'File is too large. Please choose a file under 50 MB.' },
           { status: 413 }
         );
       }
 
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      const mimeType = file.type || 'image/jpeg';
+      const mimeType = file.type || 'application/octet-stream';
       fileData = `data:${mimeType};base64,${buffer.toString('base64')}`;
     } else {
       const body = await request.json();
@@ -33,18 +33,20 @@ export async function POST(request: Request) {
     }
 
     if (!fileData) {
-      return NextResponse.json({ success: false, error: 'Missing image data' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Missing file data' }, { status: 400 });
     }
 
-    const uploadResult = await uploadToCloudinary(fileData, 'gnaath_communications');
+    const resourceType = fileData.match(/^data:(video)\//) ? 'video' : 'auto';
+    const uploadResult = await uploadToCloudinary(fileData, 'gnaath_communications', resourceType);
 
     return NextResponse.json({
       success: true,
       url: uploadResult.secure_url,
       publicId: uploadResult.public_id,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /api/upload error:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Upload failed' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Upload failed';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

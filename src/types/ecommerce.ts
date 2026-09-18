@@ -14,6 +14,7 @@ export interface Product {
   reviewsCount: number;
   image: string;
   images?: string[];
+  video?: string;
   description: string;
   features?: string[];
   options?: ProductOption[];

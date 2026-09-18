@@ -107,6 +107,18 @@ function ProductModalDialog({ product, onClose }: ProductModalDialogProps) {
               </div>
             )}
 
+            {product.video && (
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-950">
+                <video
+                  src={product.video}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="aspect-video w-full object-contain"
+                />
+              </div>
+            )}
+
             {/* Trust Badges */}
             <div className="grid grid-cols-3 gap-2 pt-2 text-center text-[10px] text-slate-600">
               <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center gap-1">

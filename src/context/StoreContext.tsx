@@ -169,7 +169,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const savedConfig = localStorage.getItem('gnaath_store_config');
-      if (savedConfig) setConfig(JSON.parse(savedConfig));
+      if (savedConfig) {
+        const parsedConfig = JSON.parse(savedConfig);
+        setConfig({
+          ...DEFAULT_STORE_CONFIG,
+          ...parsedConfig,
+          logoUrl:
+            parsedConfig.logoUrl === '/gnaathcommlogo.png'
+              ? DEFAULT_STORE_CONFIG.logoUrl
+              : parsedConfig.logoUrl || DEFAULT_STORE_CONFIG.logoUrl,
+        });
+      }
 
       const savedCart = localStorage.getItem('gnaath_cart');
       if (savedCart) setCart(JSON.parse(savedCart));

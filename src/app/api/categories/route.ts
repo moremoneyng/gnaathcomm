@@ -7,7 +7,14 @@ export async function GET() {
   try {
     const categories = await prisma.category.findMany({
       orderBy: { name: 'asc' },
-      include: { _count: { select: { products: true } } },
+      include: {
+        _count: { select: { products: true } },
+        products: {
+          select: { image: true, images: true },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
     });
 
     return NextResponse.json(
@@ -19,6 +26,7 @@ export async function GET() {
           slug: category.slug,
           iconName: category.iconName || 'LayoutGrid',
           description: category.description || '',
+          image: category.products[0]?.image || category.products[0]?.images[0] || '',
           itemCount: category._count.products,
         })),
       },

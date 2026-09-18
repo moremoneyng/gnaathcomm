@@ -18,7 +18,7 @@ export const DEFAULT_STORE_CONFIG: StoreConfig = {
   branchOfficeAddress: 'Shop 2 Opposite Borehole/Bubbles Bar Upgate, Along Uturu-Afikpo road, Abia State University Uturu, Abia State',
   branchOfficeLandmark: 'Opposite Borehole/Bubbles Bar Upgate, ABSU',
   businessHours: 'Mon - Sat: 8:00 AM - 8:00 PM',
-  logoUrl: '/gnaathcommlogo.png',
+  logoUrl: '/gnaathlogo-header.png',
   brands: ['Apple', 'Samsung', 'JBL', 'Anker', 'Green Lion', 'Bose', 'Porodo', 'Lepresso', 'Romoss', 'Marshall', 'New Age'],
 };
 

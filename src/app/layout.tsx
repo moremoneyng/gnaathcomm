@@ -36,8 +36,8 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'G Naath Global Communications Ltd' }],
   icons: {
-    icon: '/gnaathcommlogo.png',
-    apple: '/gnaathcommlogo.png',
+    icon: '/gnaathlogo-header.png',
+    apple: '/gnaathlogo-header.png',
   },
   openGraph: {
     title: 'G Naath Global Communications Ltd',
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     siteName: 'G Naath Global Communications Ltd',
     images: [
       {
-        url: '/gnaathcommlogo.png',
+        url: '/gnaathlogo-header.png',
         width: 1200,
         height: 630,
         alt: 'G Naath Global Communications Ltd Logo',

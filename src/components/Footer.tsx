@@ -67,7 +67,7 @@ export const Footer: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-white border border-slate-200 p-1 shrink-0 shadow-xs">
                 <Image
-                  src={storeConfig.logoUrl || '/gnaathcommlogo.png'}
+                  src={storeConfig.logoUrl || '/gnaathlogo-header.png'}
                   alt={storeConfig.storeName}
                   width={44}
                   height={44}

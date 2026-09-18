@@ -13,7 +13,6 @@ import {
   ShieldCheck,
   ShoppingBag,
   Smartphone,
-  Sparkles,
   Sun,
   Wrench,
 } from 'lucide-react';
@@ -41,9 +40,8 @@ export const HeroSection: React.FC = () => {
 
       <div className="relative mx-auto grid min-h-[660px] max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[1.03fr_0.97fr] lg:px-8 lg:py-24">
         <div className="max-w-2xl">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-700/15 bg-white/80 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-emerald-800 shadow-sm backdrop-blur">
-            <Sparkles className="h-3.5 w-3.5" />
-            Products for modern living
+          <div className="hero-eyebrow mb-6 inline-flex rounded-full border border-emerald-700/15 bg-white/80 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-emerald-800 shadow-sm backdrop-blur">
+            Original, certified and topnotch products.
           </div>
 
           <h1 className="font-heading text-[3.25rem] font-black leading-[0.92] tracking-[-0.055em] text-slate-950 sm:text-7xl lg:text-[5.5rem]">
