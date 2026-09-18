@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useStore } from '@/context/StoreContext';
-import { ImageUploader } from '@/components/ImageUploader';
+import { MultiImageUploader } from '@/components/MultiImageUploader';
+import { VideoUploader } from '@/components/VideoUploader';
 import {
   BarChart3,
   ShoppingBag,
@@ -77,7 +78,8 @@ export default function AdminPage() {
   const [productBrand, setProductBrand] = useState('Apple');
   const [productPrice, setProductPrice] = useState('');
   const [productOriginalPrice, setProductOriginalPrice] = useState('');
-  const [productImage, setProductImage] = useState('');
+  const [productImages, setProductImages] = useState<string[]>([]);
+  const [productVideo, setProductVideo] = useState<string>('');
   const [productDescription, setProductDescription] = useState('');
   const [productBadge, setProductBadge] = useState('');
   const [productInStock, setProductInStock] = useState(true);
@@ -254,7 +256,8 @@ export default function AdminPage() {
     setProductBrand('Apple');
     setProductPrice('');
     setProductOriginalPrice('');
-    setProductImage('');
+    setProductImages([]);
+    setProductVideo('');
     setProductDescription('');
     setProductBadge('');
     setProductInStock(true);
@@ -293,7 +296,8 @@ export default function AdminPage() {
     setProductBrand(p.brand || '');
     setProductPrice(p.price.toString());
     setProductOriginalPrice(p.originalPrice ? p.originalPrice.toString() : '');
-    setProductImage(p.image);
+    setProductImages(p.images && p.images.length > 0 ? p.images : (p.image ? [p.image] : []));
+    setProductVideo(p.video || '');
     setProductDescription(p.description || '');
     setProductBadge(p.badge || '');
     setProductInStock(p.inStock);
@@ -303,8 +307,8 @@ export default function AdminPage() {
 
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!productName || !productPrice || !productImage) {
-      showToast('Name, Price, and Cloudinary Image are required!', 'error');
+    if (!productName || !productPrice || productImages.length === 0) {
+      showToast('Name, Price, and at least one Image are required!', 'error');
       return;
     }
 
@@ -317,7 +321,9 @@ export default function AdminPage() {
         brand: productBrand,
         price: parseFloat(productPrice),
         originalPrice: productOriginalPrice ? parseFloat(productOriginalPrice) : null,
-        image: productImage,
+        image: productImages.length > 0 ? productImages[0] : '',
+        images: productImages,
+        video: productVideo,
         description: productDescription,
         badge: productBadge,
         inStock: productInStock,
@@ -1342,11 +1348,18 @@ export default function AdminPage() {
             </div>
 
             <form onSubmit={handleSaveProduct} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-              {/* Cloudinary Image Uploader */}
-              <ImageUploader
-                currentImageUrl={productImage}
-                onUploadSuccess={(url) => setProductImage(url)}
-                label="Product Image (Uploads directly to Cloudinary CDN) *"
+              {/* Cloudinary Multi Image Uploader */}
+              <MultiImageUploader
+                currentImages={productImages}
+                onUploadSuccess={(urls) => setProductImages(urls)}
+                label="Product Images (Uploads directly to Cloudinary CDN, Max 5) *"
+                maxImages={5}
+              />
+
+              {/* Cloudinary Video Uploader */}
+              <VideoUploader
+                currentVideoUrl={productVideo}
+                onUploadSuccess={(url) => setProductVideo(url || '')}
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

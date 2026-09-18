@@ -52,6 +52,7 @@ export async function GET(request: Request) {
       reviewsCount: p.reviewsCount,
       image: p.image,
       images: p.images,
+      video: p.video,
       description: p.description,
       features: p.features,
       options: p.options ? (p.options as any) : [],
@@ -89,6 +90,7 @@ export async function POST(request: Request) {
       originalPrice,
       image,
       images,
+      video,
       description,
       features,
       options,
@@ -126,7 +128,8 @@ export async function POST(request: Request) {
         price: numericPrice,
         originalPrice: numericOriginalPrice,
         image,
-        images: images && images.length > 0 ? images : [image],
+        images: images && Array.isArray(images) && images.length > 0 ? images.slice(0, 5) : [image],
+        video: video || null,
         description: description || '',
         features: Array.isArray(features) ? features : [],
         options: options || null,
@@ -152,7 +155,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, name, category: categorySlug, brand, price, originalPrice, image, description, inStock, isFeatured } = body;
+    const { id, name, category: categorySlug, brand, price, originalPrice, image, images, video, description, inStock, isFeatured } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'Product ID required for update' }, { status: 400 });
@@ -171,7 +174,9 @@ export async function PUT(request: Request) {
         ...(brand && { brand }),
         ...(price && { price: parseFloat(price) }),
         ...(originalPrice !== undefined && { originalPrice: originalPrice ? parseFloat(originalPrice) : null }),
-        ...(image && { image, images: [image] }),
+        ...(image && { image }),
+        ...(images && Array.isArray(images) && { images: images.slice(0, 5) }),
+        ...(video !== undefined && { video }),
         ...(description !== undefined && { description }),
         ...(inStock !== undefined && { inStock: Boolean(inStock) }),
         ...(isFeatured !== undefined && { isFeatured: Boolean(isFeatured) }),

@@ -38,6 +38,7 @@ model Product {
   reviewsCount  Int         @default(0)
   image         String
   images        String[]    @default([])
+  video         String?
   badge         String?
   inStock       Boolean     @default(true)
   isFeatured    Boolean     @default(false)
