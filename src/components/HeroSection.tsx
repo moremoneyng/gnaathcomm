@@ -38,18 +38,18 @@ export const HeroSection: React.FC = () => {
       <div className="absolute -right-28 -top-32 h-96 w-96 rounded-full bg-emerald-300/20 blur-3xl" />
       <div className="absolute -bottom-44 left-1/3 h-96 w-96 rounded-full bg-amber-200/25 blur-3xl" />
 
-      <div className="relative mx-auto grid min-h-[660px] max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[1.03fr_0.97fr] lg:px-8 lg:py-24">
+      <div className="relative mx-auto grid min-h-[620px] max-w-7xl items-center gap-10 px-4 py-10 sm:gap-12 sm:px-6 sm:py-16 lg:grid-cols-[1.03fr_0.97fr] lg:px-8 lg:py-20">
         <div className="max-w-2xl">
-          <div className="hero-eyebrow mb-6 inline-flex rounded-full border border-emerald-700/15 bg-white/80 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-emerald-800 shadow-sm backdrop-blur">
+          <div className="hero-eyebrow mb-5 inline-flex text-[10px] font-black italic tracking-[0.12em] text-emerald-800 sm:mb-6 sm:text-[11px] sm:tracking-[0.18em]">
             Original, certified and topnotch products.
           </div>
 
-          <h1 className="font-heading text-[3.25rem] font-black leading-[0.92] tracking-[-0.055em] text-slate-950 sm:text-7xl lg:text-[5.5rem]">
+          <h1 className="font-heading text-[2.8rem] font-black leading-[0.94] tracking-[-0.055em] text-slate-950 sm:text-7xl lg:text-[5.5rem]">
             Everything Modern.
             <span className="mt-2 block text-emerald-700">All in One Place.</span>
           </h1>
 
-          <p className="mt-7 max-w-xl text-base font-semibold leading-7 text-slate-700 sm:text-lg sm:leading-8">
+          <p className="mt-6 max-w-xl text-[15px] font-semibold leading-6 text-slate-700 sm:mt-7 sm:text-lg sm:leading-8">
             Shop smartphones, electronics, home and office appliances, solar energy systems,
             gadgets, cars, bikes and more from one trusted destination.
           </p>
@@ -63,15 +63,15 @@ export const HeroSection: React.FC = () => {
             <span>&ldquo;{storeConfig.motto}&rdquo;</span>
           </div>
 
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Link href="/shop" className="inline-flex items-center justify-center gap-2.5 rounded-full bg-slate-950 px-7 py-4 text-sm font-extrabold text-white shadow-xl shadow-slate-950/15 transition hover:-translate-y-0.5 hover:bg-emerald-700">
-              <ShoppingBag className="h-4 w-4" />
+          <div className="mt-8 grid grid-cols-2 gap-2.5 sm:flex sm:gap-3">
+            <Link href="/shop" className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full bg-slate-950 px-3 py-3.5 text-[11px] font-extrabold text-white shadow-xl shadow-slate-950/15 transition hover:-translate-y-0.5 hover:bg-emerald-700 sm:gap-2.5 sm:px-7 sm:py-4 sm:text-sm">
+              <ShoppingBag className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
               Shop All Products
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
             </Link>
-            <Link href="#catalog" className="inline-flex items-center justify-center gap-2.5 rounded-full border border-slate-300 bg-white px-7 py-4 text-sm font-extrabold text-slate-950 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-700 hover:text-emerald-800">
+            <Link href="#catalog" className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-3.5 text-[11px] font-extrabold text-slate-950 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-700 hover:text-emerald-800 sm:gap-2.5 sm:px-7 sm:py-4 sm:text-sm">
               Explore Categories
-              <ArrowDown className="h-4 w-4" />
+              <ArrowDown className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
             </Link>
           </div>
 
