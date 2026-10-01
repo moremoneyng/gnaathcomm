@@ -9,6 +9,7 @@ import { ChangePasswordCard } from '@/components/admin/ChangePasswordCard';
 import { StoreSettingsForm } from '@/components/admin/StoreSettingsForm';
 import { MediaCleanupCard } from '@/components/admin/MediaCleanupCard';
 import { OverviewDashboard, type OverviewMetrics } from '@/components/admin/OverviewDashboard';
+import { OrdersManager, type AdminOrder } from '@/components/admin/OrdersManager';
 import type { AdminCategory, Product } from '@/types/ecommerce';
 import {
   ShoppingBag,
@@ -33,6 +34,8 @@ import {
   LayoutDashboard,
   ArrowUpRight,
   Plus,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -82,6 +85,24 @@ export default function AdminPage() {
   // Active Admin View
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  // Desktop-only: collapse the sidebar to icons. Remembered per browser.
+  // Safe to read on first render: the sidebar only appears after the client-side session check.
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    try {
+      return typeof window !== 'undefined' && localStorage.getItem('gnaath_admin_sidebar') === 'collapsed';
+    } catch {
+      return false;
+    }
+  });
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed((collapsed) => {
+      try {
+        localStorage.setItem('gnaath_admin_sidebar', collapsed ? 'expanded' : 'collapsed');
+      } catch {}
+      return !collapsed;
+    });
+  };
+  const hideWhenCollapsed = isSidebarCollapsed ? 'lg:hidden' : '';
 
   // Reports & Analytics State
   const [reports, setReports] = useState<OverviewMetrics | null>(null);
@@ -96,7 +117,7 @@ export default function AdminPage() {
   const [adminEmail, setAdminEmail] = useState('');
 
   // Orders State
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
 
   // Customers State
@@ -284,13 +305,12 @@ export default function AdminPage() {
         body: JSON.stringify({ id: orderId, orderStatus: newStatus }),
       });
       const data = await res.json();
-      if (data.success) {
-        showToast('Order status updated');
-        fetchOrders();
-        if (activeTab === 'overview') fetchReports();
-      }
-    } catch (err) {
-      showToast('Failed to update order', 'error');
+      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to update order');
+      showToast('Order status updated', 'success');
+      await fetchOrders();
+      fetchReports();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Failed to update order', 'error');
     }
   };
 
@@ -399,15 +419,17 @@ export default function AdminPage() {
     <div className="flex min-h-screen bg-[#f4f6f9] font-sans text-slate-900">
       {/* 1. SIDEBAR (fixed on desktop, drawer on mobile) */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-68 flex-col bg-ink-950 text-slate-300 transition-transform duration-300 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-68 flex-col bg-ink-950 text-slate-300 transition-[transform,width] duration-300 ${
+          isSidebarCollapsed ? 'lg:w-20' : ''
+        } ${
           isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
         aria-label="Admin navigation"
       >
-        <div className="flex items-center justify-between px-5 pb-4 pt-5">
+        <div className={`flex items-center justify-between px-5 pb-4 pt-5 ${isSidebarCollapsed ? 'lg:justify-center lg:px-3' : ''}`}>
           <Link href="/admin" className="flex items-center gap-3" onClick={() => setActiveTab('overview')}>
             <Image src="/gnaathlogo-transparent-dark.png" alt="G Naath" width={58} height={40} className="h-10 w-auto" />
-            <span>
+            <span className={hideWhenCollapsed}>
               <span className="block text-sm font-extrabold tracking-tight text-white">G Naath Global</span>
               <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-brand-green">Admin</span>
             </span>
@@ -425,7 +447,8 @@ export default function AdminPage() {
         <nav className="no-scrollbar flex-1 space-y-6 overflow-y-auto px-3 py-4">
           {NAV_GROUPS.map((group) => (
             <div key={group.label}>
-              <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">{group.label}</p>
+              <p className={`px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500 ${hideWhenCollapsed}`}>{group.label}</p>
+              {isSidebarCollapsed && <div className="mx-auto mb-2 hidden h-px w-8 bg-white/10 lg:block" aria-hidden="true" />}
               <div className="space-y-1">
                 {group.items.map(({ tab, label, icon: Icon }) => {
                   const isActive = activeTab === tab;
@@ -446,7 +469,10 @@ export default function AdminPage() {
                         setIsMobileSidebarOpen(false);
                       }}
                       aria-current={isActive ? 'page' : undefined}
-                      className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${
+                      title={isSidebarCollapsed ? label : undefined}
+                      className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${
+                        isSidebarCollapsed ? 'lg:justify-center lg:px-0' : ''
+                      } ${
                         isActive ? 'bg-white/10 text-white shadow-inner' : 'text-slate-400 hover:bg-white/5 hover:text-white'
                       }`}
                     >
@@ -457,10 +483,16 @@ export default function AdminPage() {
                       >
                         <Icon className="h-4 w-4" />
                       </span>
-                      <span className="flex-1 text-left">{label}</span>
+                      <span className={`flex-1 text-left ${hideWhenCollapsed}`}>{label}</span>
+                      {badge && isSidebarCollapsed ? (
+                        <span
+                          className={`absolute right-3 top-2 hidden h-2 w-2 rounded-full lg:block ${tab === 'products' ? 'bg-rose-400' : 'bg-amber-300'}`}
+                          aria-hidden="true"
+                        />
+                      ) : null}
                       {badge ? (
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${hideWhenCollapsed} ${
                             tab === 'products' ? 'bg-rose-500/20 text-rose-200' : 'bg-amber-400/20 text-amber-200'
                           }`}
                           title={tab === 'products' ? 'Out of stock' : tab === 'orders' ? 'Awaiting payment' : 'New requests'}
@@ -476,22 +508,37 @@ export default function AdminPage() {
           ))}
         </nav>
 
-        <div className="space-y-3 border-t border-white/10 p-4">
+        <div className={`space-y-3 border-t border-white/10 p-4 ${isSidebarCollapsed ? 'lg:px-3' : ''}`}>
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className={`hidden w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-400 transition hover:bg-white/5 hover:text-white lg:flex ${
+              isSidebarCollapsed ? 'justify-center px-0' : ''
+            }`}
+          >
+            {isSidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            <span className={hideWhenCollapsed}>Collapse sidebar</span>
+          </button>
           <Link
             href="/"
             target="_blank"
-            className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-2.5 text-xs font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
+            title="View store"
+            className={`flex items-center justify-between rounded-xl bg-white/5 px-3 py-2.5 text-xs font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white ${
+              isSidebarCollapsed ? 'lg:justify-center' : ''
+            }`}
           >
             <span className="flex items-center gap-2">
-              <Store className="h-4 w-4 text-brand-green" /> View store
+              <Store className="h-4 w-4 text-brand-green" /> <span className={hideWhenCollapsed}>View store</span>
             </span>
-            <ArrowUpRight className="h-3.5 w-3.5" />
+            <ArrowUpRight className={`h-3.5 w-3.5 ${hideWhenCollapsed}`} />
           </Link>
-          <div className="flex items-center gap-3 px-1">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-cyan-400 to-emerald-500 text-xs font-black text-ink-950">
+          <div className={`flex items-center gap-3 px-1 ${isSidebarCollapsed ? 'lg:flex-col lg:gap-2' : ''}`}>
+            <span title={adminEmail || 'Administrator'} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-cyan-400 to-emerald-500 text-xs font-black text-ink-950">
               {(adminEmail || 'A').charAt(0).toUpperCase()}
             </span>
-            <span className="min-w-0 flex-1">
+            <span className={`min-w-0 flex-1 ${hideWhenCollapsed}`}>
               <span className="block truncate text-xs font-bold text-white">{adminEmail || 'Administrator'}</span>
               <span className="block text-[10px] text-slate-500">Administrator</span>
             </span>
@@ -513,7 +560,7 @@ export default function AdminPage() {
       )}
 
       {/* 2. MAIN CONTENT AREA */}
-      <div className="flex min-w-0 flex-1 flex-col lg:pl-68">
+      <div className={`flex min-w-0 flex-1 flex-col transition-[padding] duration-300 ${isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-68'}`}>
         <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-slate-200/80 bg-white/85 px-4 py-3.5 backdrop-blur-xl sm:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button
@@ -584,104 +631,16 @@ export default function AdminPage() {
             <CategoryManager categories={categories} onChanged={refreshInventory} notify={showToast} />
           )}
 
-          {/* TAB 3: ORDERS MANAGEMENT */}
+          {/* TAB 3: ORDERS */}
           {activeTab === 'orders' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between bg-white p-4 rounded-3xl border border-slate-200 shadow-xs">
-                <h3 className="text-sm font-extrabold text-slate-950 flex items-center gap-2">
-                  <Layers className="w-4.5 h-4.5 text-emerald-600" />
-                  <span>Customer Orders Directory ({orders.length})</span>
-                </h3>
-
-                <button
-                  onClick={fetchOrders}
-                  className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors flex items-center gap-1.5 border border-slate-200"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isLoadingOrders ? 'animate-spin' : ''}`} />
-                  <span>Refresh Orders</span>
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {orders.length > 0 ? (
-                  orders.map((o) => (
-                    <div key={o.id} className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-mono px-3 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-extrabold">
-                              {o.orderNumber}
-                            </span>
-                            <span className="text-xs text-slate-400">
-                              {new Date(o.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <h4 className="text-sm font-extrabold text-slate-950 mt-2">{o.customerName} ({o.customerPhone})</h4>
-                          <p className="text-xs text-slate-600 mt-0.5">
-                            Fulfillment Branch: <span className="font-bold text-slate-900">{o.preferredBranch === 'abia_branch_office' ? 'Abia State ABSU Branch' : 'Lagos Head Office'}</span> • Delivery Address: {o.customerAddress || 'Store Pickup'}
-                          </p>
-                          <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-bold">
-                            <span className={`rounded-full px-2.5 py-1 ${o.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                              Payment: {o.paymentStatus}
-                            </span>
-                            {o.paymentReference && <span className="rounded-full bg-slate-100 px-2.5 py-1 font-mono text-slate-600">{o.paymentReference}</span>}
-                            {o.flutterwaveTransactionId && <span className="rounded-full bg-sky-50 px-2.5 py-1 font-mono text-sky-700">FLW #{o.flutterwaveTransactionId}</span>}
-                            {o.paidAt && <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-600">Paid {new Date(o.paidAt).toLocaleString()}</span>}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <span className="text-xs text-slate-400 font-medium">Order Total</span>
-                            <p className="text-lg font-black text-slate-950">
-                              {storeConfig.currencySymbol}{o.totalAmount.toLocaleString()}
-                            </p>
-                          </div>
-
-                          <select
-                            value={o.orderStatus}
-                            onChange={(e) => handleUpdateOrderStatus(o.id, e.target.value)}
-                            className="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600"
-                          >
-                            <option value="PENDING">PENDING</option>
-                            <option value="PROCESSING">PROCESSING</option>
-                            <option value="SHIPPED">SHIPPED</option>
-                            <option value="DELIVERED">DELIVERED</option>
-                            <option value="CANCELLED">CANCELLED</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      {/* Items List */}
-                      <div className="space-y-2">
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Order Items</span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {o.items?.map((item: any) => (
-                            <div key={item.id} className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
-                              <span className="min-w-0">
-                                <span className="font-bold text-slate-900">{item.productName} (x{item.quantity})</span>
-                                {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
-                                  <span className="mt-0.5 block text-[11px] text-slate-500">
-                                    {Object.entries(item.selectedOptions as Record<string, string>)
-                                      .map(([key, value]) => `${key}: ${value}`)
-                                      .join(' · ')}
-                                  </span>
-                                )}
-                              </span>
-                              <span className="text-emerald-700 font-black">{storeConfig.currencySymbol}{item.price.toLocaleString()}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="p-12 text-center text-slate-500 bg-white rounded-3xl border border-slate-200 font-medium">
-                    No customer checkout orders recorded yet.
-                  </div>
-                )}
-              </div>
-            </div>
+            <OrdersManager
+              orders={orders}
+              isLoading={isLoadingOrders}
+              currencySymbol={storeConfig.currencySymbol}
+              onRefresh={fetchOrders}
+              onUpdateStatus={handleUpdateOrderStatus}
+              notify={showToast}
+            />
           )}
 
           {/* TAB 4: CUSTOMERS DIRECTORY */}

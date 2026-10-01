@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAdminSession } from '@/lib/auth';
 
+const ORDER_STATUSES = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+const PAYMENT_STATUSES = ['PENDING', 'PAID', 'FAILED'];
+
 export async function GET() {
   try {
     const session = await getAdminSession();
@@ -38,6 +41,12 @@ export async function PATCH(request: Request) {
     if (!id) {
       return NextResponse.json({ success: false, error: 'Order ID required' }, { status: 400 });
     }
+    if (orderStatus !== undefined && !ORDER_STATUSES.includes(orderStatus)) {
+      return NextResponse.json({ success: false, error: 'Unknown order status.' }, { status: 400 });
+    }
+    if (paymentStatus !== undefined && !PAYMENT_STATUSES.includes(paymentStatus)) {
+      return NextResponse.json({ success: false, error: 'Unknown payment status.' }, { status: 400 });
+    }
 
     const updated = await prisma.order.update({
       where: { id },
@@ -50,7 +59,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true, order: updated });
   } catch (error: any) {
     console.error('Error updating order:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Could not update the order.' }, { status: 500 });
   }
 }
 
