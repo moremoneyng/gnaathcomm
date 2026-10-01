@@ -24,6 +24,9 @@ export const MobileBottomNav: React.FC = () => {
 
   const isContactPage = pathname === '/contact';
 
+  // The admin dashboard has its own navigation; the shop chrome stays out of the way there.
+  if (pathname?.startsWith('/admin')) return null;
+
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 border-t border-slate-200/90 backdrop-blur-2xl px-3 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex items-center justify-around shadow-[0_-10px_25px_rgba(0,0,0,0.08)]">
       <Link

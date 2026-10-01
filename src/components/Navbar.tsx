@@ -71,6 +71,9 @@ export const Navbar: React.FC = () => {
     router.push('/');
   };
 
+  // The admin dashboard has its own navigation; the shop chrome stays out of the way there.
+  if (pathname?.startsWith('/admin')) return null;
+
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-2xl border-b border-slate-200 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

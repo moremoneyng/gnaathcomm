@@ -8,9 +8,9 @@ import { CategoryEditorDialog, CategoryManager } from '@/components/admin/Catego
 import { ChangePasswordCard } from '@/components/admin/ChangePasswordCard';
 import { StoreSettingsForm } from '@/components/admin/StoreSettingsForm';
 import { MediaCleanupCard } from '@/components/admin/MediaCleanupCard';
+import { OverviewDashboard, type OverviewMetrics } from '@/components/admin/OverviewDashboard';
 import type { AdminCategory, Product } from '@/types/ecommerce';
 import {
-  BarChart3,
   ShoppingBag,
   Layers,
   Users,
@@ -22,19 +22,52 @@ import {
   CheckCircle,
   AlertCircle,
   RefreshCw,
-  DollarSign,
   Menu,
   X,
-  TrendingUp,
   MessageSquare,
   ShieldCheck,
   Lock,
   Mail,
-  Building2,
   Store,
   Tags,
+  LayoutDashboard,
+  ArrowUpRight,
+  Plus,
 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
+
+type AdminTab = 'overview' | 'products' | 'categories' | 'orders' | 'customers' | 'services' | 'settings';
+
+const NAV_GROUPS: { label: string; items: { tab: AdminTab; label: string; icon: React.ElementType }[] }[] = [
+  { label: 'Overview', items: [{ tab: 'overview', label: 'Dashboard', icon: LayoutDashboard }] },
+  {
+    label: 'Catalogue',
+    items: [
+      { tab: 'products', label: 'Products & inventory', icon: ShoppingBag },
+      { tab: 'categories', label: 'Categories', icon: Tags },
+    ],
+  },
+  {
+    label: 'Sales',
+    items: [
+      { tab: 'orders', label: 'Orders', icon: Layers },
+      { tab: 'customers', label: 'Customers', icon: Users },
+    ],
+  },
+  { label: 'Services', items: [{ tab: 'services', label: 'Repairs & solar', icon: Wrench }] },
+  { label: 'Store', items: [{ tab: 'settings', label: 'Settings', icon: Settings }] },
+];
+
+const TAB_META: Record<AdminTab, { title: string; group: string }> = {
+  overview: { title: 'Dashboard', group: 'Overview' },
+  products: { title: 'Products & inventory', group: 'Catalogue' },
+  categories: { title: 'Categories', group: 'Catalogue' },
+  orders: { title: 'Orders', group: 'Sales' },
+  customers: { title: 'Customers', group: 'Sales' },
+  services: { title: 'Repair & solar requests', group: 'Services' },
+  settings: { title: 'Store settings', group: 'Store' },
+};
 
 export default function AdminPage() {
   const { products, refreshProducts, storeConfig, updateConfig, showToast } = useStore();
@@ -47,11 +80,11 @@ export default function AdminPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Active Admin View
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'categories' | 'orders' | 'customers' | 'services' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Reports & Analytics State
-  const [reports, setReports] = useState<any>(null);
+  const [reports, setReports] = useState<OverviewMetrics | null>(null);
   const [isLoadingReports, setIsLoadingReports] = useState(false);
 
   // Products & Categories State
@@ -363,371 +396,174 @@ export default function AdminPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-slate-900 flex font-sans">
-      {/* 1. LEFT SIDEBAR NAVIGATION (Desktop & Mobile Drawer) */}
+    <div className="flex min-h-screen bg-[#f4f6f9] font-sans text-slate-900">
+      {/* 1. SIDEBAR (fixed on desktop, drawer on mobile) */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col justify-between transition-transform duration-300 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-68 flex-col bg-ink-950 text-slate-300 transition-transform duration-300 ${
           isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
+        aria-label="Admin navigation"
       >
-        <div className="p-6 space-y-6">
-          {/* Logo & Store Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white font-black text-xl flex items-center justify-center shadow-md">
-                G
-              </div>
-              <div>
-                <h2 className="text-sm font-extrabold text-slate-950 tracking-tight">G Naath Global</h2>
-                <p className="text-[10px] font-bold text-emerald-700 font-mono">ADMIN DASHBOARD</p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setIsMobileSidebarOpen(false)}
-              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-900"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="space-y-1.5">
-            <button
-              onClick={() => {
-                setActiveTab('overview');
-                setIsMobileSidebarOpen(false);
-              }}
-              className={`w-full px-3.5 py-3 rounded-2xl text-xs font-bold transition-all flex items-center gap-3 ${
-                activeTab === 'overview'
-                  ? 'bg-slate-950 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
-              }`}
-            >
-              <BarChart3 className="w-4.5 h-4.5" />
-              <span>Reports &amp; Overview</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveTab('products');
-                setIsMobileSidebarOpen(false);
-              }}
-              className={`w-full px-3.5 py-3 rounded-2xl text-xs font-bold transition-all flex items-center gap-3 ${
-                activeTab === 'products'
-                  ? 'bg-slate-950 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
-              }`}
-            >
-              <ShoppingBag className="w-4.5 h-4.5" />
-              <span>Products &amp; Inventory</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveTab('categories');
-                setIsMobileSidebarOpen(false);
-              }}
-              className={`w-full px-3.5 py-3 rounded-2xl text-xs font-bold transition-all flex items-center gap-3 ${
-                activeTab === 'categories'
-                  ? 'bg-slate-950 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
-              }`}
-            >
-              <Tags className="w-4.5 h-4.5" />
-              <span>Categories</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveTab('orders');
-                setIsMobileSidebarOpen(false);
-              }}
-              className={`w-full px-3.5 py-3 rounded-2xl text-xs font-bold transition-all flex items-center gap-3 ${
-                activeTab === 'orders'
-                  ? 'bg-slate-950 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
-              }`}
-            >
-              <Layers className="w-4.5 h-4.5" />
-              <span>Orders Management</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveTab('customers');
-                setIsMobileSidebarOpen(false);
-              }}
-              className={`w-full px-3.5 py-3 rounded-2xl text-xs font-bold transition-all flex items-center gap-3 ${
-                activeTab === 'customers'
-                  ? 'bg-slate-950 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
-              }`}
-            >
-              <Users className="w-4.5 h-4.5" />
-              <span>Customers Directory</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveTab('services');
-                setIsMobileSidebarOpen(false);
-              }}
-              className={`w-full px-3.5 py-3 rounded-2xl text-xs font-bold transition-all flex items-center gap-3 ${
-                activeTab === 'services'
-                  ? 'bg-slate-950 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
-              }`}
-            >
-              <Wrench className="w-4.5 h-4.5" />
-              <span>Service Requests</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveTab('settings');
-                setIsMobileSidebarOpen(false);
-              }}
-              className={`w-full px-3.5 py-3 rounded-2xl text-xs font-bold transition-all flex items-center gap-3 ${
-                activeTab === 'settings'
-                  ? 'bg-slate-950 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
-              }`}
-            >
-              <Settings className="w-4.5 h-4.5" />
-              <span>Store Configuration</span>
-            </button>
-          </nav>
+        <div className="flex items-center justify-between px-5 pb-4 pt-5">
+          <Link href="/admin" className="flex items-center gap-3" onClick={() => setActiveTab('overview')}>
+            <Image src="/gnaathlogo-transparent-dark.png" alt="G Naath" width={58} height={40} className="h-10 w-auto" />
+            <span>
+              <span className="block text-sm font-extrabold tracking-tight text-white">G Naath Global</span>
+              <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-brand-green">Admin</span>
+            </span>
+          </Link>
+          <button
+            type="button"
+            onClick={() => setIsMobileSidebarOpen(false)}
+            aria-label="Close menu"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white lg:hidden"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
-        {/* Sidebar Footer & Logout */}
-        <div className="p-4 border-t border-slate-200 bg-slate-50 space-y-3">
-          <div className="flex items-center gap-3 px-2">
-            <div className="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-800 font-bold text-xs flex items-center justify-center">
-              AD
+        <nav className="no-scrollbar flex-1 space-y-6 overflow-y-auto px-3 py-4">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label}>
+              <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">{group.label}</p>
+              <div className="space-y-1">
+                {group.items.map(({ tab, label, icon: Icon }) => {
+                  const isActive = activeTab === tab;
+                  const badge =
+                    tab === 'orders'
+                      ? reports?.sales?.awaitingPaymentOrders
+                      : tab === 'products'
+                        ? reports?.inventory?.outOfStock
+                        : tab === 'services'
+                          ? reports?.services?.pending
+                          : 0;
+                  return (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => {
+                        setActiveTab(tab);
+                        setIsMobileSidebarOpen(false);
+                      }}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${
+                        isActive ? 'bg-white/10 text-white shadow-inner' : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                      }`}
+                    >
+                      <span
+                        className={`flex h-7 w-7 items-center justify-center rounded-lg transition ${
+                          isActive ? 'bg-emerald-500 text-ink-950' : 'bg-white/5 text-slate-400 group-hover:text-white'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <span className="flex-1 text-left">{label}</span>
+                      {badge ? (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            tab === 'products' ? 'bg-rose-500/20 text-rose-200' : 'bg-amber-400/20 text-amber-200'
+                          }`}
+                          title={tab === 'products' ? 'Out of stock' : tab === 'orders' ? 'Awaiting payment' : 'New requests'}
+                        >
+                          {badge}
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-slate-950 truncate">{adminEmail || 'Administrator'}</p>
-              <p className="text-[10px] text-slate-500 font-medium">Administrator</p>
-            </div>
-          </div>
+          ))}
+        </nav>
 
-          <button
-            onClick={handleLogout}
-            className="w-full py-2.5 rounded-xl bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-700 hover:text-rose-600 text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow-sm"
+        <div className="space-y-3 border-t border-white/10 p-4">
+          <Link
+            href="/"
+            target="_blank"
+            className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-2.5 text-xs font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
           >
-            <LogOut className="w-4 h-4 text-rose-500" />
-            <span>Sign Out</span>
-          </button>
+            <span className="flex items-center gap-2">
+              <Store className="h-4 w-4 text-brand-green" /> View store
+            </span>
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </Link>
+          <div className="flex items-center gap-3 px-1">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-cyan-400 to-emerald-500 text-xs font-black text-ink-950">
+              {(adminEmail || 'A').charAt(0).toUpperCase()}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-xs font-bold text-white">{adminEmail || 'Administrator'}</span>
+              <span className="block text-[10px] text-slate-500">Administrator</span>
+            </span>
+            <button
+              type="button"
+              onClick={handleLogout}
+              aria-label="Sign out"
+              title="Sign out"
+              className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-500/15 hover:text-rose-300"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </aside>
 
-      {/* Backdrop overlay for mobile drawer */}
       {isMobileSidebarOpen && (
-        <div
-          onClick={() => setIsMobileSidebarOpen(false)}
-          className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-xs lg:hidden"
-        />
+        <div onClick={() => setIsMobileSidebarOpen(false)} className="fixed inset-0 z-40 bg-ink-950/50 backdrop-blur-sm lg:hidden" />
       )}
 
       {/* 2. MAIN CONTENT AREA */}
-      <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
-        {/* Topbar Header */}
-        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200 px-4 sm:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <div className="flex min-w-0 flex-1 flex-col lg:pl-68">
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-slate-200/80 bg-white/85 px-4 py-3.5 backdrop-blur-xl sm:px-8">
+          <div className="flex min-w-0 items-center gap-3">
             <button
+              type="button"
               onClick={() => setIsMobileSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200"
+              aria-label="Open menu"
+              className="rounded-xl border border-slate-200 bg-white p-2 text-slate-700 hover:bg-slate-50 lg:hidden"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="h-5 w-5" />
             </button>
-            <div>
-              <h1 className="text-base sm:text-lg font-black text-slate-950 capitalize">
-                {activeTab === 'overview'
-                  ? 'Performance Reports & Overview'
-                  : activeTab === 'products'
-                  ? 'Products & Inventory Management'
-                  : activeTab === 'categories'
-                  ? 'Category Management'
-                  : activeTab === 'orders'
-                  ? 'Customer Orders Management'
-                  : activeTab === 'customers'
-                  ? 'Customer Contact Directory'
-                  : activeTab === 'services'
-                  ? 'Phone Repair & Solar Quote Requests'
-                  : 'Store Configuration Settings'}
-              </h1>
-              <p className="text-xs text-slate-500 hidden sm:block">Supabase PostgreSQL • Cloudinary Image Storage</p>
+            <div className="min-w-0">
+              <p className="hidden text-[11px] font-semibold text-slate-400 sm:block">
+                Admin <span className="mx-1">/</span> {TAB_META[activeTab].group}
+              </p>
+              <h1 className="truncate text-base font-extrabold tracking-tight text-ink-900 sm:text-lg">{TAB_META[activeTab].title}</h1>
             </div>
           </div>
-
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {activeTab !== 'products' && activeTab !== 'overview' && (
+              <button
+                type="button"
+                onClick={openNewProduct}
+                className="hidden h-9 items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 text-xs font-extrabold text-white shadow-sm transition hover:bg-emerald-500 sm:inline-flex"
+              >
+                <Plus className="h-4 w-4" /> New product
+              </button>
+            )}
             <Link
               href="/"
               target="_blank"
-              className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors flex items-center gap-1.5 border border-slate-200"
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
             >
-              <Store className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="hidden sm:inline">View Store Front</span>
+              <Store className="h-4 w-4 text-emerald-600" />
+              <span className="hidden md:inline">View store</span>
             </Link>
           </div>
         </header>
 
         {/* Dashboard Main View Container */}
-        <main className="p-4 sm:p-8 space-y-6 flex-1">
-          {/* TAB 1: OVERVIEW & PERFORMANCE REPORTS */}
+        <main className="mx-auto w-full max-w-[1400px] flex-1 space-y-6 p-4 sm:p-8">
+          {/* TAB 1: OVERVIEW */}
           {activeTab === 'overview' && (
-            <div className="space-y-6">
-              {/* Stat Cards Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                {/* Total Revenue */}
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-2">
-                  <div className="flex items-center justify-between text-slate-500">
-                    <span className="text-xs font-bold uppercase tracking-wider">Total Orders Revenue</span>
-                    <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
-                      <DollarSign className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div className="text-2xl sm:text-3xl font-black text-slate-950">
-                    {storeConfig.currencySymbol}
-                    {(reports?.totalRevenue || 0).toLocaleString()}
-                  </div>
-                  <p className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
-                    <TrendingUp className="w-3.5 h-3.5" />
-                    <span>Real-time PostgreSQL tracking</span>
-                  </p>
-                </div>
-
-                {/* Total Orders */}
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-2">
-                  <div className="flex items-center justify-between text-slate-500">
-                    <span className="text-xs font-bold uppercase tracking-wider">Total Customer Orders</span>
-                    <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
-                      <Layers className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div className="text-2xl sm:text-3xl font-black text-slate-950">
-                    {reports?.totalOrders || 0}
-                  </div>
-                  <p className="text-[11px] text-slate-500 font-medium">
-                    {reports?.pendingOrdersCount || 0} Pending • {reports?.deliveredOrdersCount || 0} Delivered
-                  </p>
-                </div>
-
-                {/* Products in Inventory */}
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-2">
-                  <div className="flex items-center justify-between text-slate-500">
-                    <span className="text-xs font-bold uppercase tracking-wider">Products in Catalog</span>
-                    <div className="p-2 rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
-                      <ShoppingBag className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div className="text-2xl sm:text-3xl font-black text-slate-950">
-                    {reports?.totalProducts || products.length}
-                  </div>
-                  <p className="text-[11px] text-emerald-600 font-semibold">
-                    {reports?.inStockCount || products.filter((p) => p.inStock).length} In Stock Ready
-                    {reports?.lowStockCount ? (
-                      <button type="button" onClick={() => setActiveTab('products')} className="ml-1 text-orange-600 hover:underline">
-                        · {reports.lowStockCount} low stock
-                      </button>
-                    ) : null}
-                  </p>
-                </div>
-
-                {/* Service Requests */}
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-2">
-                  <div className="flex items-center justify-between text-slate-500">
-                    <span className="text-xs font-bold uppercase tracking-wider">Service Inquiries</span>
-                    <div className="p-2 rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
-                      <Wrench className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div className="text-2xl sm:text-3xl font-black text-slate-950">
-                    {(reports?.repairCount || 0) + (reports?.solarCount || 0)}
-                  </div>
-                  <p className="text-[11px] text-slate-500 font-medium">
-                    {reports?.repairCount || 0} Phone Repairs • {reports?.solarCount || 0} Solar Quotes
-                  </p>
-                </div>
-              </div>
-
-              {/* Branch Fulfillment Comparison */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
-                      <Building2 className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-extrabold text-slate-950">Lagos Head Office Fulfillment</h3>
-                      <p className="text-xs text-slate-500">Ago Palace Roundabout, Isolo, Lagos</p>
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-semibold text-slate-500">Branch Revenue</span>
-                      <p className="text-xl font-black text-slate-950">
-                        {storeConfig.currencySymbol}
-                        {(reports?.branchMetrics?.lagos?.revenue || 0).toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs font-semibold text-slate-500">Total Orders</span>
-                      <p className="text-xl font-black text-emerald-600">
-                        {reports?.branchMetrics?.lagos?.count || 0}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-cyan-50 text-cyan-600 border border-cyan-100">
-                      <Building2 className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-extrabold text-slate-950">Abia ABSU Branch Fulfillment</h3>
-                      <p className="text-xs text-slate-500">ABSU Uturu, Along Uturu-Afikpo Road</p>
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-semibold text-slate-500">Branch Revenue</span>
-                      <p className="text-xl font-black text-slate-950">
-                        {storeConfig.currencySymbol}
-                        {(reports?.branchMetrics?.abia?.revenue || 0).toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs font-semibold text-slate-500">Total Orders</span>
-                      <p className="text-xl font-black text-cyan-600">
-                        {reports?.branchMetrics?.abia?.count || 0}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Category Breakdown list */}
-              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-                <h3 className="text-sm font-extrabold text-slate-950 flex items-center gap-2">
-                  <ShoppingBag className="w-4.5 h-4.5 text-emerald-600" />
-                  <span>Category Inventory Distribution</span>
-                </h3>
-
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                  {reports?.categoryBreakdown?.map((cat: any) => (
-                    <div key={cat.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-1">
-                      <p className="text-xs font-extrabold text-slate-950 capitalize">{cat.name}</p>
-                      <p className="text-lg font-black text-emerald-600">{cat.productCount} items</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <OverviewDashboard
+              metrics={reports}
+              isLoading={isLoadingReports}
+              currencySymbol={storeConfig.currencySymbol}
+              onNavigate={(tab) => setActiveTab(tab)}
+              onAddProduct={openNewProduct}
+              onRefresh={fetchReports}
+            />
           )}
 
           {/* TAB 2: PRODUCTS & INVENTORY MANAGER */}

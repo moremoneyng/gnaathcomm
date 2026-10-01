@@ -5,6 +5,7 @@ import { StoreProvider } from '@/context/StoreContext';
 import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { ToastNotification } from '@/components/ToastNotification';
+import { PageFrame } from '@/components/PageFrame';
 
 // Body: Plus Jakarta Sans (refined, highly legible). Headings: Sora (crisp, modern tech character).
 const bodyFont = Plus_Jakarta_Sans({
@@ -75,7 +76,7 @@ export default function RootLayout({
       >
         <StoreProvider>
           <Navbar />
-          <div className="pb-20 md:pb-0">{children}</div>
+          <PageFrame>{children}</PageFrame>
           <MobileBottomNav />
           <ToastNotification />
         </StoreProvider>

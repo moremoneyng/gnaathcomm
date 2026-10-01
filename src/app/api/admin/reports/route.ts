@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAdminSession } from '@/lib/auth';
 import { LOW_STOCK_THRESHOLD } from '@/lib/productInput';
+import { buildSalesReport } from '@/lib/salesReport';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
@@ -10,83 +13,63 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'Unauthorized admin access' }, { status: 401 });
     }
 
-    // 1. Fetch Orders Metrics
-    const orders = await prisma.order.findMany({
-      include: { items: true },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    const totalOrders = orders.length;
-    const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-    const pendingOrdersCount = orders.filter((o) => o.orderStatus === 'PENDING').length;
-    const deliveredOrdersCount = orders.filter((o) => o.orderStatus === 'DELIVERED').length;
-
-    // Branch Breakdown
-    const lagosOrders = orders.filter((o) => o.preferredBranch === 'lagos_head_office');
-    const abiaOrders = orders.filter((o) => o.preferredBranch === 'abia_branch_office');
-
-    const lagosRevenue = lagosOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-    const abiaRevenue = abiaOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-
-    // 2. Fetch Inventory Metrics
-    const products = await prisma.product.findMany({
-      include: { category: true },
-    });
-
-    const totalProducts = products.length;
-    const inStockCount = products.filter((p) => p.inStock).length;
-    const outOfStockCount = products.filter((p) => !p.inStock).length;
-    const featuredCount = products.filter((p) => p.isFeatured).length;
-    const lowStockCount = products.filter(
-      (p) => p.stockQuantity !== null && p.stockQuantity > 0 && p.stockQuantity <= LOW_STOCK_THRESHOLD
-    ).length;
-
-    // Categories breakdown
-    const categories = await prisma.category.findMany({
-      include: {
-        _count: {
-          select: { products: true },
+    const [orders, products, categories, repairCount, solarCount, pendingRepairs, pendingSolar] = await Promise.all([
+      prisma.order.findMany({
+        select: {
+          id: true,
+          orderNumber: true,
+          customerName: true,
+          totalAmount: true,
+          paymentStatus: true,
+          orderStatus: true,
+          preferredBranch: true,
+          createdAt: true,
+          paidAt: true,
+          items: { select: { productId: true, productName: true, price: true, quantity: true } },
         },
-      },
-    });
+      }),
+      prisma.product.findMany({
+        select: { inStock: true, isPreorder: true, isFeatured: true, stockQuantity: true, description: true, images: true },
+      }),
+      prisma.category.findMany({ include: { _count: { select: { products: true } } } }),
+      prisma.repairBooking.count(),
+      prisma.solarQuoteRequest.count(),
+      prisma.repairBooking.count({ where: { status: 'PENDING' } }),
+      prisma.solarQuoteRequest.count({ where: { status: 'PENDING' } }),
+    ]);
 
-    const categoryBreakdown = categories.map((c) => ({
-      id: c.id,
-      name: c.name,
-      slug: c.slug,
-      productCount: c._count.products,
-    }));
+    const sales = buildSalesReport(orders);
 
-    // 3. Customer & Service Counts
-    const repairCount = await prisma.repairBooking.count();
-    const solarCount = await prisma.solarQuoteRequest.count();
+    const inventory = {
+      total: products.length,
+      available: products.filter((p) => p.inStock && !p.isPreorder).length,
+      preorder: products.filter((p) => p.inStock && p.isPreorder).length,
+      outOfStock: products.filter((p) => !p.inStock).length,
+      featured: products.filter((p) => p.isFeatured).length,
+      lowStock: products.filter(
+        (p) => !p.isPreorder && p.stockQuantity !== null && p.stockQuantity > 0 && p.stockQuantity <= LOW_STOCK_THRESHOLD
+      ).length,
+      thinListings: products.filter((p) => !p.description.trim() || p.images.length < 2).length,
+    };
 
-    return NextResponse.json({
-      success: true,
-      metrics: {
-        totalRevenue,
-        totalOrders,
-        pendingOrdersCount,
-        deliveredOrdersCount,
-        totalProducts,
-        inStockCount,
-        outOfStockCount,
-        featuredCount,
-        lowStockCount,
-        repairCount,
-        solarCount,
-        branchMetrics: {
-          lagos: { count: lagosOrders.length, revenue: lagosRevenue },
-          abia: { count: abiaOrders.length, revenue: abiaRevenue },
-        },
-        categoryBreakdown,
-      },
-    });
-  } catch (error: any) {
-    console.error('Error fetching admin reports metrics:', error?.message || error);
     return NextResponse.json(
-      { success: false, error: 'Reports are temporarily unavailable.' },
-      { status: 503 }
+      {
+        success: true,
+        metrics: {
+          sales,
+          inventory,
+          lowStockCount: inventory.lowStock,
+          services: { repairs: repairCount, solar: solarCount, pending: pendingRepairs + pendingSolar },
+          categoryBreakdown: categories
+            .map((c) => ({ id: c.id, name: c.name, slug: c.slug, productCount: c._count.products }))
+            .sort((a, b) => b.productCount - a.productCount),
+          generatedAt: new Date().toISOString(),
+        },
+      },
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } }
     );
+  } catch (error: unknown) {
+    console.error('Error fetching admin reports metrics:', error instanceof Error ? error.message : error);
+    return NextResponse.json({ success: false, error: 'Reports are temporarily unavailable.' }, { status: 503 });
   }
 }
