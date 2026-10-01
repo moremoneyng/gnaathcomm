@@ -21,7 +21,8 @@ import {
   Wrench,
 } from 'lucide-react';
 
-const ROTATE_MS = 5500;
+/** How long each product stays in the hero before cross-fading to the next. */
+const ROTATE_MS = 6000;
 
 // Each link jumps to the matching category when one exists, otherwise to a sensible fallback.
 const QUICK_LINKS = [
@@ -44,7 +45,7 @@ export const HeroSection: React.FC = () => {
     const available = products.filter((p) => p.inStock && p.image);
     const featured = available.filter((p) => p.isFeatured);
     const rest = available.filter((p) => !p.isFeatured);
-    return [...featured, ...rest].slice(0, 5);
+    return [...featured, ...rest].slice(0, 6);
   }, [products]);
 
   const current = spotlight.length > 0 ? spotlight[activeIndex % spotlight.length] : null;
@@ -63,27 +64,53 @@ export const HeroSection: React.FC = () => {
 
   return (
     <section className="relative isolate overflow-hidden bg-ink-950 text-white">
-      {/* Full-bleed background photo, blended into the brand navy */}
-      <div className="absolute inset-0 -z-20">
-        <Image
-          src="/hero-background.jpg"
-          alt=""
-          fill
-          preload
-          sizes="100vw"
-          className="hero-kenburns object-cover object-[60%_20%] lg:object-[80%_center]"
-        />
+      {/* Rotating product backdrop. Each product is shown through a soft elliptical
+          "spotlight" fade so white studio backgrounds melt into the navy instead of reading as boxes. */}
+      <div className="absolute inset-0 -z-20" aria-hidden="true">
+        {spotlight.length === 0 ? (
+          <Image
+            src="/hero-background.jpg"
+            alt=""
+            fill
+            preload
+            sizes="100vw"
+            className="hero-kenburns object-cover object-[60%_20%] opacity-70 lg:object-[80%_center]"
+          />
+        ) : (
+          spotlight.map((product, index) => {
+            const isActive = index === activeIndex % spotlight.length;
+            return (
+              <div
+                key={product.id}
+                className={`absolute inset-0 transition-opacity duration-[1400ms] ease-out ${isActive ? 'opacity-100' : 'opacity-0'}`}
+              >
+                <div className="hero-spotlight absolute inset-x-0 top-0 h-[48%] sm:h-[52%] lg:inset-y-0 lg:left-auto lg:right-0 lg:h-full lg:w-[58%]">
+                  <div className={`absolute inset-[12%] lg:inset-[14%] ${isActive ? 'hero-kenburns' : ''}`}>
+                    <Image
+                      src={product.image}
+                      alt=""
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 58vw"
+                      loading={index < 2 ? 'eager' : 'lazy'}
+                      className="object-contain"
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
-      {/* Phones: photo shows at the top and melts into the text below. */}
-      <div className="absolute inset-0 -z-10 bg-linear-to-b from-ink-950/30 via-ink-950/80 to-ink-950 lg:hidden" />
-      {/* Desktop: deep navy behind the copy, opening up to the photo on the right. */}
-      <div className="absolute inset-0 -z-10 hidden bg-linear-to-r from-ink-950 via-ink-950/85 to-ink-950/15 lg:block" />
+      {/* Phones: product glows at the top and fades into the text below. */}
+      <div className="absolute inset-0 -z-10 bg-linear-to-b from-transparent from-15% via-ink-950/85 via-50% to-ink-950 lg:hidden" />
+      {/* Desktop: deep navy behind the copy, opening up to the product on the right. */}
+      <div className="absolute inset-0 -z-10 hidden bg-linear-to-r from-ink-950 from-30% via-ink-950/70 via-50% to-transparent to-75% lg:block" />
       {/* Brand glow and a soft fade into the category bar. */}
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_85%_10%,rgba(34,211,238,0.22),transparent_55%),radial-gradient(ellipse_at_0%_100%,rgba(52,211,153,0.2),transparent_50%)]" />
       <div className="hero-grid absolute inset-0 -z-10 opacity-60" />
       <div className="absolute inset-x-0 bottom-0 -z-10 h-24 bg-linear-to-t from-ink-950 to-transparent" />
 
-      <div className="mx-auto flex min-h-[calc(100svh-4rem)] max-w-7xl flex-col justify-end px-4 pb-10 pt-40 sm:min-h-0 sm:px-6 sm:pb-16 sm:pt-56 lg:min-h-[640px] lg:justify-center lg:px-8 lg:py-24">
+      <div className="mx-auto flex min-h-[calc(100svh-4rem)] max-w-7xl flex-col justify-end px-4 pb-8 pt-56 sm:min-h-0 sm:px-6 sm:pb-16 sm:pt-[22rem] lg:min-h-[640px] lg:justify-center lg:px-8 lg:py-24">
         <div className="max-w-2xl">
           <p className="hero-eyebrow inline-flex items-center gap-2 rounded-full border border-white/15 bg-ink-950/40 px-3.5 py-1.5 text-[11px] font-bold tracking-wide text-emerald-200 backdrop-blur-md">
             <span className="relative flex h-2 w-2">
@@ -98,23 +125,23 @@ export const HeroSection: React.FC = () => {
             <span className="text-brand-gradient mt-1 block pb-2">All in One Place.</span>
           </h1>
 
-          <p className="hero-fade-up mt-5 max-w-xl text-[15px] leading-7 text-slate-200 [animation-delay:120ms] sm:text-lg sm:leading-8">
+          <p className="hero-fade-up mt-4 max-w-xl text-[15px] leading-6 sm:mt-5 sm:leading-7 text-slate-200 [animation-delay:120ms] sm:text-lg sm:leading-8">
             Smartphones, electronics, home &amp; office appliances, solar systems, gadgets, cars and bikes —
             plus expert repairs and installations — from one trusted store in Lagos and Abia.
           </p>
 
-          <div className="hero-fade-up mt-8 flex flex-col gap-3 [animation-delay:220ms] sm:flex-row">
+          <div className="hero-fade-up mt-7 grid grid-cols-2 gap-2.5 [animation-delay:220ms] sm:mt-8 sm:flex sm:gap-3">
             <Link
               href="/shop"
-              className="inline-flex items-center justify-center gap-2.5 rounded-full bg-white px-7 py-4 text-sm font-extrabold text-ink-900 shadow-[0_10px_40px_-10px_rgba(52,211,153,0.6)] transition hover:-translate-y-0.5 hover:bg-emerald-50"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-3 py-3.5 text-[13px] font-extrabold sm:gap-2.5 sm:px-7 sm:py-4 sm:text-sm text-ink-900 shadow-[0_10px_40px_-10px_rgba(52,211,153,0.6)] transition hover:-translate-y-0.5 hover:bg-emerald-50"
             >
-              <ShoppingBag className="h-4 w-4" />
+              <ShoppingBag className="hidden h-4 w-4 sm:block" />
               Shop All Products
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="#catalog"
-              className="inline-flex items-center justify-center gap-2.5 rounded-full border border-white/25 bg-white/10 px-7 py-4 text-sm font-extrabold text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:border-emerald-300/60 hover:bg-white/15"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-3.5 text-[13px] font-extrabold sm:gap-2.5 sm:px-7 sm:py-4 sm:text-sm text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:border-emerald-300/60 hover:bg-white/15"
             >
               Explore Categories
               <ArrowDown className="h-4 w-4" />
@@ -171,7 +198,7 @@ export const HeroSection: React.FC = () => {
             </div>
           )}
 
-          <ul className="hero-fade-up mt-8 grid grid-cols-1 gap-3 text-xs font-semibold text-slate-200 [animation-delay:360ms] sm:grid-cols-3">
+          <ul className="hero-fade-up mt-8 hidden grid-cols-1 gap-3 text-xs sm:grid font-semibold text-slate-200 [animation-delay:360ms] sm:grid-cols-3">
             {[
               { icon: ShieldCheck, text: storeConfig.motto || 'Original & certified' },
               { icon: Truck, text: 'Lagos & Abia dispatch' },

@@ -194,6 +194,23 @@ h3 {
 }
 
 .hero-glow { animation: hero-glow 14s ease-in-out infinite; }
+/*
+ * Hero product stage. Product photos have white studio backgrounds; multiplying them onto a
+ * light-to-navy glow turns that white into the glow itself, so each product sits in a soft pool
+ * of light that fades into the page with no visible edge. The mask hides the stage boundary.
+ */
+.hero-spotlight {
+  isolation: isolate;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, #f4f7fb 0%, #dce5ef 30%, #8ea3bf 50%, #1f3d6a 68%, #050d1f 86%);
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 55%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 55%, transparent 100%);
+}
+
+/* Blend the animated wrapper (it's its own layer because of the drift transform), not the img. */
+.hero-spotlight > div {
+  mix-blend-mode: multiply;
+}
+
 /* Slow drift on the hero background photo so it feels alive without distracting. */
 .hero-kenburns { animation: hero-kenburns 24s ease-in-out infinite alternate; will-change: transform; }
 .hero-float { animation: hero-float 7s ease-in-out infinite; }
