@@ -1,75 +1,47 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { prisma } from '@/lib/prisma';
 import { createAdminSession } from '@/lib/auth';
+import { clientIp, isRateLimited, resetRateLimit } from '@/lib/rateLimit';
+
+const MAX_ATTEMPTS = 8;
+const WINDOW_MS = 15 * 60 * 1000;
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { email, password } = body;
+    const body = await request.json().catch(() => ({}));
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+    const password = typeof body.password === 'string' ? body.password : '';
 
     if (!email || !password) {
       return NextResponse.json({ success: false, error: 'Email and password required' }, { status: 400 });
     }
 
-    const trimmedEmail = email.trim().toLowerCase();
-
-    // Fallback credentials check if DB is offline/paused
-    const isDefaultAdmin = trimmedEmail === 'gnaathglobal@gmail.com' && password === 'Gnaathcomm';
-
-    let admin = null;
-    try {
-      const client = prisma || new (require('@prisma/client').PrismaClient)();
-      const adminUserModel = (client as any).adminUser || (client as any).admin_user;
-
-      if (adminUserModel) {
-        admin = await adminUserModel.findUnique({
-          where: { email: trimmedEmail },
-        });
-      }
-    } catch (dbErr: any) {
-      console.warn('Database offline during admin login, checking default admin fallback:', dbErr?.message);
+    const limitKey = `admin-login:${clientIp(request)}:${email}`;
+    if (isRateLimited(limitKey, MAX_ATTEMPTS, WINDOW_MS)) {
+      return NextResponse.json(
+        { success: false, error: 'Too many sign-in attempts. Please wait 15 minutes and try again.' },
+        { status: 429 }
+      );
     }
 
-    if (admin) {
-      const isValidPassword = await bcrypt.compare(password, admin.password);
-      if (!isValidPassword) {
-        return NextResponse.json({ success: false, error: 'Invalid admin credentials' }, { status: 401 });
-      }
+    const admin = await prisma.adminUser.findUnique({ where: { email } });
+    const isValidPassword = admin ? await bcrypt.compare(password, admin.password) : false;
 
-      await createAdminSession({
-        id: admin.id,
-        email: admin.email,
-        name: admin.name,
-        role: admin.role,
-      });
-
-      return NextResponse.json({
-        success: true,
-        admin: { id: admin.id, email: admin.email, name: admin.name, role: admin.role },
-      });
+    if (!admin || !isValidPassword) {
+      return NextResponse.json({ success: false, error: 'Invalid admin credentials' }, { status: 401 });
     }
 
-    // Fallback check
-    if (isDefaultAdmin) {
-      const fallbackPayload = {
-        id: 'default-admin-id',
-        email: 'gnaathglobal@gmail.com',
-        name: 'G Naath Admin',
-        role: 'ADMIN',
-      };
+    resetRateLimit(limitKey);
+    const session = { id: admin.id, email: admin.email, name: admin.name, role: admin.role };
+    await createAdminSession(session, admin.password);
 
-      await createAdminSession(fallbackPayload);
-
-      return NextResponse.json({
-        success: true,
-        admin: fallbackPayload,
-      });
-    }
-
-    return NextResponse.json({ success: false, error: 'Invalid admin credentials' }, { status: 401 });
-  } catch (error: any) {
+    return NextResponse.json({ success: true, admin: session });
+  } catch (error: unknown) {
     console.error('Admin login error:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Login failed' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'Sign-in is temporarily unavailable. Please try again shortly.' },
+      { status: 503 }
+    );
   }
 }

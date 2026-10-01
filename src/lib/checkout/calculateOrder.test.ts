@@ -36,3 +36,27 @@ for (const [name, cart, message] of [
     );
   });
 }
+
+test('respects tracked stock quantities', () => {
+  const tracked = [
+    { id: 't1', name: 'Power Bank', price: 20000, inStock: true, stockQuantity: 2 },
+    { id: 't2', name: 'Earbuds', price: 9000, inStock: true, stockQuantity: 0 },
+  ];
+  assert.equal(calculateOrder([{ productId: 't1', quantity: 2 }], tracked).totalAmount, 40000);
+  assert.throws(() => calculateOrder([{ productId: 't1', quantity: 3 }], tracked), /Only 2 of Power Bank left/);
+  assert.throws(() => calculateOrder([{ productId: 't2', quantity: 1 }], tracked), /out of stock/);
+});
+
+test('pre-orders are orderable regardless of stock and are labelled on the order', () => {
+  const result = calculateOrder(
+    [{ productId: 'pre', quantity: 5, selectedOptions: { 'Pre-order': 'spoofed', Color: 'Blue' } }],
+    [{ id: 'pre', name: 'Galaxy S27', price: 1000, inStock: true, stockQuantity: 0, isPreorder: true, preorderNote: 'Ships in 3 weeks' }],
+  );
+  assert.equal(result.items[0].productName, 'Galaxy S27 (Pre-order)');
+  assert.deepEqual(result.items[0].selectedOptions, { Color: 'Blue', 'Pre-order': 'Ships in 3 weeks' });
+
+  assert.throws(
+    () => calculateOrder([{ productId: 'pre', quantity: 1 }], [{ id: 'pre', name: 'Closed', price: 1, inStock: false, isPreorder: true }]),
+    /out of stock/,
+  );
+});

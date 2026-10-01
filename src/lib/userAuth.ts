@@ -1,9 +1,10 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import { getSessionSecret } from '@/lib/sessionSecret';
 
-const USER_JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || 'gnaath_global_communications_user_secret_key_2026'
-);
+function userSecret() {
+  return getSessionSecret('user', process.env.USER_JWT_SECRET);
+}
 
 const COOKIE_NAME = 'gnaath_user_token';
 
@@ -22,7 +23,7 @@ export async function createUserSession(payload: UserSessionPayload) {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('30d')
-    .sign(USER_JWT_SECRET);
+    .sign(userSecret());
 
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
@@ -43,7 +44,7 @@ export async function getUserSession(): Promise<UserSessionPayload | null> {
 
     if (!token) return null;
 
-    const { payload } = await jwtVerify(token, USER_JWT_SECRET);
+    const { payload } = await jwtVerify(token, userSecret());
     return {
       id: payload.id as string,
       email: payload.email as string,

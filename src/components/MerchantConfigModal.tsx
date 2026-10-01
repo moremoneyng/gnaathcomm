@@ -16,10 +16,10 @@ export function MerchantConfigModal() {
 
   if (!isConfigModalOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateConfig(formData);
-    setIsConfigModalOpen(false);
+    // The server only accepts this from a signed-in admin.
+    if (await updateConfig(formData)) setIsConfigModalOpen(false);
   };
 
   const handleReset = () => {

@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       createPayment: createFlutterwavePayment,
       loadProducts: (ids) => prisma.product.findMany({
         where: { id: { in: ids } },
-        select: { id: true, name: true, price: true, inStock: true },
+        select: { id: true, name: true, price: true, inStock: true, stockQuantity: true, isPreorder: true, preorderNote: true },
       }),
       createOrder: (input) => prisma.order.create({
         data: {

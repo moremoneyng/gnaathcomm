@@ -99,6 +99,11 @@ export async function finalizeStoredPayment(input: { transactionId: string; txRe
         include: { items: true },
       });
       if (paidOrder) {
+        // Only the request that flipped the order to PAID reaches here, so stock drops exactly once.
+        // A stock hiccup must never undo a confirmed payment, so failures are logged, not thrown.
+        await decrementTrackedStock(paidOrder.items).catch((error) => {
+          console.error(`Stock update failed for paid order ${paidOrder.orderNumber}:`, error);
+        });
         await Promise.allSettled([
           paidOrder.customerEmail
             ? sendOrderReceiptEmail(paidOrder.customerEmail, paidOrder.customerName, paidOrder)
@@ -108,4 +113,23 @@ export async function finalizeStoredPayment(input: { transactionId: string; txRe
       }
     },
   });
+}
+
+/** Reduces tracked stock for paid items, never below zero, marking sold-out products unavailable. */
+async function decrementTrackedStock(items: { productId: string | null; quantity: number }[]) {
+  const totals = new Map<string, number>();
+  for (const item of items) {
+    if (item.productId && item.quantity > 0) totals.set(item.productId, (totals.get(item.productId) || 0) + item.quantity);
+  }
+  if (totals.size === 0) return;
+
+  await prisma.$transaction(
+    Array.from(totals, ([productId, quantity]) => prisma.$executeRaw`
+      UPDATE "products"
+      SET "stockQuantity" = GREATEST("stockQuantity" - ${quantity}, 0),
+          "inStock" = ("stockQuantity" - ${quantity}) > 0,
+          "updatedAt" = (NOW() AT TIME ZONE 'UTC')
+      WHERE "id" = ${productId} AND "stockQuantity" IS NOT NULL AND "isPreorder" = false
+    `),
+  );
 }

@@ -1,0 +1,60 @@
+import React from 'react';
+import {
+  BatteryCharging,
+  Bike,
+  Camera,
+  CarFront,
+  Dumbbell,
+  Gamepad2,
+  Gift,
+  Headphones,
+  Laptop,
+  LayoutGrid,
+  Lightbulb,
+  Plug,
+  Printer,
+  Refrigerator,
+  Shirt,
+  Smartphone,
+  Sparkles,
+  Sun,
+  Tablet,
+  ToyBrick,
+  Tv,
+  Video,
+  Watch,
+  Wrench,
+  type LucideProps,
+} from 'lucide-react';
+
+export const CATEGORY_ICONS: Record<string, React.ComponentType<LucideProps>> = {
+  LayoutGrid,
+  Smartphone,
+  Tablet,
+  Laptop,
+  Watch,
+  Headphones,
+  BatteryCharging,
+  Plug,
+  Sun,
+  Tv,
+  Refrigerator,
+  Printer,
+  Gamepad2,
+  Camera,
+  CarFront,
+  Bike,
+  Shirt,
+  Dumbbell,
+  Wrench,
+  ToyBrick,
+  Lightbulb,
+  Gift,
+  Video,
+  Sparkles,
+};
+
+export function CategoryIcon({ name, ...props }: { name?: string | null } & LucideProps) {
+  const Icon = (name && CATEGORY_ICONS[name]) || LayoutGrid;
+  return <Icon aria-hidden="true" {...props} />;
+}

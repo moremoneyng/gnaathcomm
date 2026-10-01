@@ -20,7 +20,16 @@ export interface Product {
   options?: ProductOption[];
   badge?: string;
   inStock: boolean;
+  /** Units on hand; null/undefined when stock is not tracked. */
+  stockQuantity?: number | null;
+  /** Orderable now, ships later. */
+  isPreorder?: boolean;
+  /** e.g. "Ships in 2–3 weeks". */
+  preorderNote?: string | null;
   isFeatured?: boolean;
+  categoryName?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Category {
@@ -31,6 +40,18 @@ export interface Category {
   description: string;
   itemCount: number;
   image: string;
+}
+
+export interface AdminCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  iconName: string;
+  customIcon: boolean;
+  image: string;
+  fallbackImage: string;
+  itemCount: number;
 }
 
 export interface CartItem {

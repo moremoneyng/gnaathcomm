@@ -2,8 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useStore } from '@/context/StoreContext';
-import { MultiImageUploader } from '@/components/MultiImageUploader';
-import { VideoUploader } from '@/components/VideoUploader';
+import { ProductManager } from '@/components/admin/ProductManager';
+import { ProductFormModal } from '@/components/admin/ProductFormModal';
+import { CategoryEditorDialog, CategoryManager } from '@/components/admin/CategoryManager';
+import { ChangePasswordCard } from '@/components/admin/ChangePasswordCard';
+import { StoreSettingsForm } from '@/components/admin/StoreSettingsForm';
+import { MediaCleanupCard } from '@/components/admin/MediaCleanupCard';
+import type { AdminCategory, Product } from '@/types/ecommerce';
 import {
   BarChart3,
   ShoppingBag,
@@ -13,33 +18,22 @@ import {
   Sun,
   Settings,
   LogOut,
-  Plus,
-  Trash2,
-  Edit3,
   Search,
   CheckCircle,
   AlertCircle,
   RefreshCw,
-  SlidersHorizontal,
   DollarSign,
-  Phone,
-  MapPin,
-  Sparkles,
   Menu,
   X,
-  ArrowUpRight,
   TrendingUp,
-  PackageCheck,
-  PackageX,
   MessageSquare,
   ShieldCheck,
   Lock,
   Mail,
   Building2,
   Store,
-  ChevronDown,
+  Tags,
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 
 export default function AdminPage() {
@@ -53,38 +47,20 @@ export default function AdminPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Active Admin View
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'services' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'categories' | 'orders' | 'customers' | 'services' | 'settings'>('overview');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Reports & Analytics State
   const [reports, setReports] = useState<any>(null);
   const [isLoadingReports, setIsLoadingReports] = useState(false);
 
-  // Products Tab State
-  const [productSearch, setProductSearch] = useState('');
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('all');
-  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  // Products & Categories State
+  const [isProductFormOpen, setIsProductFormOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isUploadSuccessOpen, setIsUploadSuccessOpen] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [newCategoryDescription, setNewCategoryDescription] = useState('');
-  const [isSavingCategory, setIsSavingCategory] = useState(false);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [editingProduct, setEditingProduct] = useState<any | null>(null);
-
-  // Product Form State
-  const [productName, setProductName] = useState('');
-  const [productCategory, setProductCategory] = useState('smartphones');
-  const [productBrand, setProductBrand] = useState('Apple');
-  const [productPrice, setProductPrice] = useState('');
-  const [productOriginalPrice, setProductOriginalPrice] = useState('');
-  const [productImages, setProductImages] = useState<string[]>([]);
-  const [productVideo, setProductVideo] = useState<string>('');
-  const [productDescription, setProductDescription] = useState('');
-  const [productBadge, setProductBadge] = useState('');
-  const [productInStock, setProductInStock] = useState(true);
-  const [productIsFeatured, setProductIsFeatured] = useState(false);
-  const [isSavingProduct, setIsSavingProduct] = useState(false);
+  const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [adminEmail, setAdminEmail] = useState('');
 
   // Orders State
   const [orders, setOrders] = useState<any[]>([]);
@@ -100,8 +76,6 @@ export default function AdminPage() {
   const [solarQuotes, setSolarQuotes] = useState<any[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(false);
 
-  // Settings State Form
-  const [configForm, setConfigForm] = useState(storeConfig);
 
   // Check Admin Session on mount
   useEffect(() => {
@@ -111,6 +85,7 @@ export default function AdminPage() {
         const data = await res.json();
         if (data.authenticated) {
           setIsAuthenticated(true);
+          setAdminEmail(data.admin?.email || '');
         } else {
           setIsAuthenticated(false);
         }
@@ -121,9 +96,6 @@ export default function AdminPage() {
     checkAuth();
   }, []);
 
-  useEffect(() => {
-    setConfigForm(storeConfig);
-  }, [storeConfig]);
 
   // Fetch Tab Specific Data
   useEffect(() => {
@@ -147,9 +119,7 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/categories', { cache: 'no-store' });
       const data = await res.json();
       if (data.success) {
-        const loadedCategories = data.categories || [];
-        setCategories(loadedCategories);
-        setProductCategory((current) => current || loadedCategories[0]?.slug || '');
+        setCategories(data.categories || []);
       }
     } catch (err) {
       console.error('Failed to fetch categories:', err);
@@ -232,6 +202,8 @@ export default function AdminPage() {
 
       if (data.success) {
         setIsAuthenticated(true);
+        setAdminEmail(data.admin?.email || '');
+        setLoginPassword('');
         showToast('Welcome back, Admin!');
       } else {
         setLoginError(data.error || 'Invalid credentials');
@@ -249,143 +221,26 @@ export default function AdminPage() {
     showToast('Logged out of Admin Dashboard');
   };
 
-  // Reset Product Form
-  const resetProductForm = () => {
-    setProductName('');
-    setProductCategory(categories[0]?.slug || '');
-    setProductBrand('Apple');
-    setProductPrice('');
-    setProductOriginalPrice('');
-    setProductImages([]);
-    setProductVideo('');
-    setProductDescription('');
-    setProductBadge('');
-    setProductInStock(true);
-    setProductIsFeatured(false);
+  const refreshInventory = async () => {
+    await Promise.all([refreshProducts(), fetchCategories()]);
+    if (activeTab === 'overview') fetchReports();
+  };
+
+  const openNewProduct = () => {
     setEditingProduct(null);
+    setIsProductFormOpen(true);
   };
 
-  const handleCreateCategory = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSavingCategory(true);
-    try {
-      const res = await fetch('/api/admin/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newCategoryName, description: newCategoryDescription }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to create category');
-      await fetchCategories();
-      setProductCategory(data.category.slug);
-      setNewCategoryName('');
-      setNewCategoryDescription('');
-      setIsCategoryModalOpen(false);
-      showToast('Category created successfully!', 'success');
-    } catch (err: any) {
-      showToast(err.message || 'Failed to create category', 'error');
-    } finally {
-      setIsSavingCategory(false);
-    }
+  const openEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setIsProductFormOpen(true);
   };
 
-  const handleDeleteCategory = async (id: string, name: string, productCount: number) => {
-    if (productCount > 0) {
-      showToast('Delete or move the products in this category first.', 'error');
-      return;
-    }
-    if (!confirm(`Delete the empty category "${name}"?`)) return;
-
-    try {
-      const res = await fetch(`/api/admin/categories?id=${id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to delete category');
-      await fetchCategories();
-      showToast('Category deleted successfully', 'success');
-    } catch (err: any) {
-      showToast(err.message || 'Failed to delete category', 'error');
-    }
-  };
-
-  const handleOpenEdit = (p: any) => {
-    setEditingProduct(p);
-    setProductName(p.name);
-    setProductCategory(p.category);
-    setProductBrand(p.brand || '');
-    setProductPrice(p.price.toString());
-    setProductOriginalPrice(p.originalPrice ? p.originalPrice.toString() : '');
-    setProductImages(p.images && p.images.length > 0 ? p.images : (p.image ? [p.image] : []));
-    setProductVideo(p.video || '');
-    setProductDescription(p.description || '');
-    setProductBadge(p.badge || '');
-    setProductInStock(p.inStock);
-    setProductIsFeatured(p.isFeatured || false);
-    setIsAddProductOpen(true);
-  };
-
-  const handleSaveProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!productName || !productPrice || productImages.length === 0) {
-      showToast('Name, Price, and at least one Image are required!', 'error');
-      return;
-    }
-
-    setIsSavingProduct(true);
-    try {
-      const payload = {
-        ...(editingProduct && { id: editingProduct.id }),
-        name: productName,
-        category: productCategory,
-        brand: productBrand,
-        price: parseFloat(productPrice),
-        originalPrice: productOriginalPrice ? parseFloat(productOriginalPrice) : null,
-        image: productImages.length > 0 ? productImages[0] : '',
-        images: productImages,
-        video: productVideo,
-        description: productDescription,
-        badge: productBadge,
-        inStock: productInStock,
-        isFeatured: productIsFeatured,
-      };
-
-      const res = await fetch('/api/products', {
-        method: editingProduct ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        showToast(editingProduct ? 'Product updated!' : 'Product uploaded successfully!', 'success');
-        setIsAddProductOpen(false);
-        resetProductForm();
-        await refreshProducts();
-        if (activeTab === 'overview') fetchReports();
-        if (!editingProduct) setIsUploadSuccessOpen(true);
-      } else {
-        showToast(data.error || 'Failed to save product', 'error');
-      }
-    } catch (err: any) {
-      showToast(err.message || 'Error saving product', 'error');
-    } finally {
-      setIsSavingProduct(false);
-    }
-  };
-
-  const handleDeleteProduct = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
-
-    try {
-      const res = await fetch(`/api/products?id=${id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (data.success) {
-        showToast('Product deleted from database');
-        await refreshProducts();
-        if (activeTab === 'overview') fetchReports();
-      }
-    } catch (err) {
-      showToast('Error deleting product', 'error');
-    }
+  const handleProductSaved = async (mode: 'created' | 'updated') => {
+    setIsProductFormOpen(false);
+    setEditingProduct(null);
+    await refreshInventory();
+    if (mode === 'created') setIsUploadSuccessOpen(true);
   };
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
@@ -406,11 +261,6 @@ export default function AdminPage() {
     }
   };
 
-  const handleSaveSettings = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateConfig(configForm);
-    showToast('Store configuration saved!');
-  };
 
   // Loading State
   if (isAuthenticated === null) {
@@ -445,7 +295,8 @@ export default function AdminPage() {
                 <input
                   type="email"
                   required
-                  placeholder="gnaathglobal@gmail.com"
+                  placeholder="you@example.com"
+                  autoComplete="username"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:outline-none focus:border-emerald-600 transition-colors"
@@ -460,6 +311,7 @@ export default function AdminPage() {
                 <input
                   type="password"
                   required
+                  autoComplete="current-password"
                   placeholder="••••••••"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
@@ -503,14 +355,6 @@ export default function AdminPage() {
   }
 
   // WHITE THEME EXECUTIVE DASHBOARD WITH SIDEBAR
-  const filteredProductsList = products.filter((p) => {
-    const matchesSearch =
-      p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-      p.brand?.toLowerCase().includes(productSearch.toLowerCase());
-    const matchesCategory = selectedCategoryFilter === 'all' || p.category === selectedCategoryFilter;
-    return matchesSearch && matchesCategory;
-  });
-
   const filteredCustomersList = customers.filter(
     (c) =>
       c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
@@ -577,6 +421,21 @@ export default function AdminPage() {
             >
               <ShoppingBag className="w-4.5 h-4.5" />
               <span>Products &amp; Inventory</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('categories');
+                setIsMobileSidebarOpen(false);
+              }}
+              className={`w-full px-3.5 py-3 rounded-2xl text-xs font-bold transition-all flex items-center gap-3 ${
+                activeTab === 'categories'
+                  ? 'bg-slate-950 text-white shadow-md'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
+              }`}
+            >
+              <Tags className="w-4.5 h-4.5" />
+              <span>Categories</span>
             </button>
 
             <button
@@ -648,7 +507,7 @@ export default function AdminPage() {
               AD
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-slate-950 truncate">gnaathglobal@gmail.com</p>
+              <p className="text-xs font-bold text-slate-950 truncate">{adminEmail || 'Administrator'}</p>
               <p className="text-[10px] text-slate-500 font-medium">Administrator</p>
             </div>
           </div>
@@ -688,6 +547,8 @@ export default function AdminPage() {
                   ? 'Performance Reports & Overview'
                   : activeTab === 'products'
                   ? 'Products & Inventory Management'
+                  : activeTab === 'categories'
+                  ? 'Category Management'
                   : activeTab === 'orders'
                   ? 'Customer Orders Management'
                   : activeTab === 'customers'
@@ -766,6 +627,11 @@ export default function AdminPage() {
                   </div>
                   <p className="text-[11px] text-emerald-600 font-semibold">
                     {reports?.inStockCount || products.filter((p) => p.inStock).length} In Stock Ready
+                    {reports?.lowStockCount ? (
+                      <button type="button" onClick={() => setActiveTab('products')} className="ml-1 text-orange-600 hover:underline">
+                        · {reports.lowStockCount} low stock
+                      </button>
+                    ) : null}
                   </p>
                 </div>
 
@@ -866,171 +732,20 @@ export default function AdminPage() {
 
           {/* TAB 2: PRODUCTS & INVENTORY MANAGER */}
           {activeTab === 'products' && (
-            <div className="space-y-6">
-              {/* Products Controls Bar */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-3xl border border-slate-200 shadow-xs">
-                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                  <div className="relative w-full sm:w-72">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                    <input
-                      type="text"
-                      placeholder="Search title or brand..."
-                      value={productSearch}
-                      onChange={(e) => setProductSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
-                    />
-                  </div>
+            <ProductManager
+              products={products}
+              categories={categories}
+              currencySymbol={storeConfig.currencySymbol}
+              onCreate={openNewProduct}
+              onEdit={openEditProduct}
+              onChanged={refreshInventory}
+              notify={showToast}
+            />
+          )}
 
-                  <select
-                    value={selectedCategoryFilter}
-                    onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-                    className="hidden sm:block sm:w-auto px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none"
-                  >
-                    <option value="all">All Categories</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.slug}>{category.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <button
-                    onClick={() => {
-                      resetProductForm();
-                      setIsAddProductOpen(true);
-                    }}
-                    className="px-4 py-3 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold transition-all shadow-md flex items-center justify-center gap-2 w-full sm:w-auto"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>New Product</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Data Table */}
-              <div className="sm:hidden space-y-3">
-                {filteredProductsList.length > 0 ? (
-                  filteredProductsList.map((p) => (
-                    <details key={p.id} className="group bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                      <summary className="flex items-center gap-3 p-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-                        <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-white border border-slate-200 shrink-0">
-                          <Image src={p.image} alt={p.name} fill className="object-contain p-1" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-extrabold text-slate-950 truncate">{p.name}</p>
-                          <p className="text-xs text-slate-500 truncate">{p.brand || 'G Naath Premium'}</p>
-                          <p className="mt-1 text-sm font-black text-emerald-700">{storeConfig.currencySymbol}{p.price.toLocaleString()}</p>
-                        </div>
-                        <ChevronDown className="w-5 h-5 text-slate-400 transition-transform group-open:rotate-180" />
-                      </summary>
-                      <div className="border-t border-slate-100 px-4 pb-4 pt-3 space-y-3 text-sm">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Category</span>
-                            <span className="inline-block mt-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-200 font-mono text-[10px] font-bold">{p.category}</span>
-                          </div>
-                          <div>
-                            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Stock</span>
-                            <span className={`inline-flex items-center gap-1 mt-1 text-xs font-bold ${p.inStock ? 'text-emerald-700' : 'text-rose-700'}`}>
-                              {p.inStock ? <CheckCircle className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
-                              {p.inStock ? 'In Stock' : 'Out of Stock'}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex gap-2 pt-1">
-                          <button onClick={() => handleOpenEdit(p)} className="flex-1 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center gap-2" title="Edit Product">
-                            <Edit3 className="w-4 h-4" /> Edit
-                          </button>
-                          <button onClick={() => handleDeleteProduct(p.id, p.name)} className="flex-1 py-2.5 rounded-xl bg-rose-50 text-rose-600 font-bold text-xs flex items-center justify-center gap-2" title="Delete Product">
-                            <Trash2 className="w-4 h-4" /> Delete
-                          </button>
-                        </div>
-                      </div>
-                    </details>
-                  ))
-                ) : (
-                  <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center text-sm text-slate-500">
-                    No products match this filter. Tap <span className="font-bold text-emerald-700">New Product</span> to add one.
-                  </div>
-                )}
-              </div>
-
-              <div className="hidden sm:block bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs text-slate-700">
-                    <thead className="bg-slate-50 text-slate-950 font-bold border-b border-slate-200 uppercase tracking-wider text-[11px]">
-                      <tr>
-                        <th className="p-4">Image</th>
-                        <th className="p-4">Product Name &amp; Brand</th>
-                        <th className="p-4">Category</th>
-                        <th className="p-4">Selling Price</th>
-                        <th className="p-4">Stock Status</th>
-                        <th className="p-4 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {filteredProductsList.length > 0 ? (
-                        filteredProductsList.map((p) => (
-                          <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
-                            <td className="p-4">
-                              <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-white border border-slate-200 shrink-0">
-                                <Image src={p.image} alt={p.name} fill className="object-contain p-1" />
-                              </div>
-                            </td>
-                            <td className="p-4">
-                              <div className="font-extrabold text-slate-950 text-sm">{p.name}</div>
-                              <div className="text-slate-500 text-[11px] font-medium">{p.brand || 'G Naath Premium'}</div>
-                            </td>
-                            <td className="p-4">
-                              <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-200 font-mono text-[10px] font-bold">
-                                {p.category}
-                              </span>
-                            </td>
-                            <td className="p-4 font-black text-emerald-700 text-sm">
-                              {storeConfig.currencySymbol}
-                              {p.price.toLocaleString()}
-                            </td>
-                            <td className="p-4">
-                              {p.inStock ? (
-                                <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px] inline-flex items-center gap-1">
-                                  <CheckCircle className="w-3 h-3" /> In Stock
-                                </span>
-                              ) : (
-                                <span className="px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 font-bold text-[10px] inline-flex items-center gap-1">
-                                  <AlertCircle className="w-3 h-3" /> Out of Stock
-                                </span>
-                              )}
-                            </td>
-                            <td className="p-4 text-right space-x-2">
-                              <button
-                                onClick={() => handleOpenEdit(p)}
-                                className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
-                                title="Edit Product"
-                              >
-                                <Edit3 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteProduct(p.id, p.name)}
-                                className="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors"
-                                title="Delete Product"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={6} className="p-12 text-center text-slate-500 font-medium">
-                            No products match filter. Click &quot;New Product&quot; to add items to your catalog!
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+          {/* TAB 2b: CATEGORIES */}
+          {activeTab === 'categories' && (
+            <CategoryManager categories={categories} onChanged={refreshInventory} notify={showToast} />
           )}
 
           {/* TAB 3: ORDERS MANAGEMENT */}
@@ -1107,7 +822,16 @@ export default function AdminPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {o.items?.map((item: any) => (
                             <div key={item.id} className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
-                              <span className="font-bold text-slate-900">{item.productName} (x{item.quantity})</span>
+                              <span className="min-w-0">
+                                <span className="font-bold text-slate-900">{item.productName} (x{item.quantity})</span>
+                                {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
+                                  <span className="mt-0.5 block text-[11px] text-slate-500">
+                                    {Object.entries(item.selectedOptions as Record<string, string>)
+                                      .map(([key, value]) => `${key}: ${value}`)
+                                      .join(' · ')}
+                                  </span>
+                                )}
+                              </span>
                               <span className="text-emerald-700 font-black">{storeConfig.currencySymbol}{item.price.toLocaleString()}</span>
                             </div>
                           ))}
@@ -1256,367 +980,43 @@ export default function AdminPage() {
 
           {/* TAB 6: STORE CONFIGURATION SETTINGS */}
           {activeTab === 'settings' && (
-            <div className="max-w-3xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
-              <h3 className="text-base font-extrabold text-slate-950 flex items-center gap-2 border-b border-slate-100 pb-4">
-                <Settings className="w-5 h-5 text-emerald-600" />
-                <span>Store Configuration &amp; Contact Numbers</span>
-              </h3>
-
-              <form onSubmit={handleSaveSettings} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Store Name</label>
-                    <input
-                      type="text"
-                      value={configForm.storeName}
-                      onChange={(e) => setConfigForm({ ...configForm, storeName: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">RC Registration Number</label>
-                    <input
-                      type="text"
-                      value={configForm.rcNumber}
-                      onChange={(e) => setConfigForm({ ...configForm, rcNumber: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">WhatsApp Phone Number</label>
-                    <input
-                      type="text"
-                      value={configForm.whatsappNumber}
-                      onChange={(e) => setConfigForm({ ...configForm, whatsappNumber: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none font-mono"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Contact Email</label>
-                    <input
-                      type="email"
-                      value={configForm.email}
-                      onChange={(e) => setConfigForm({ ...configForm, email: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Lagos Head Office Address</label>
-                  <input
-                    type="text"
-                    value={configForm.headOfficeAddress}
-                    onChange={(e) => setConfigForm({ ...configForm, headOfficeAddress: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Abia State Branch Office Address</label>
-                  <input
-                    type="text"
-                    value={configForm.branchOfficeAddress}
-                    onChange={(e) => setConfigForm({ ...configForm, branchOfficeAddress: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Banner Announcement Text</label>
-                  <input
-                    type="text"
-                    value={configForm.bannerAnnouncement}
-                    onChange={(e) => setConfigForm({ ...configForm, bannerAnnouncement: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none"
-                  />
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
-                  <button
-                    type="submit"
-                    className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition-all shadow-md"
-                  >
-                    Save Store Settings
-                  </button>
-                </div>
-              </form>
-
-              <section className="border-t border-slate-200 pt-6" aria-labelledby="category-management-heading">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h4 id="category-management-heading" className="flex items-center gap-2 text-sm font-extrabold text-slate-950">
-                      <Layers className="h-4 w-4 text-emerald-600" />
-                      Category Management
-                    </h4>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Delete empty categories from here. Categories with products are protected.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsCategoryModalOpen(true)}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2.5 text-xs font-extrabold text-white shadow-sm transition-colors hover:bg-emerald-500"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Add Category
-                  </button>
-                </div>
-
-                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {categories.map((category) => (
-                    <div key={category.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-bold text-slate-900">{category.name}</p>
-                        <p className="mt-0.5 text-[10px] text-slate-500">
-                          {category.itemCount} product{category.itemCount === 1 ? '' : 's'}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteCategory(category.id, category.name, category.itemCount)}
-                        disabled={category.itemCount > 0}
-                        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-2.5 py-2 text-[10px] font-bold text-rose-600 transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-35"
-                        title={category.itemCount > 0 ? 'Delete or move products first' : `Delete ${category.name}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Delete
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </section>
+            <div className="space-y-6">
+            <StoreSettingsForm key={JSON.stringify(storeConfig)} config={storeConfig} onSave={updateConfig} />
+            <MediaCleanupCard notify={showToast} />
+            <ChangePasswordCard notify={showToast} />
             </div>
           )}
         </main>
       </div>
 
-      {/* 3. UPLOAD & ADD PRODUCT MODAL (White Theme) */}
-      {isAddProductOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md overflow-y-auto">
-          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl text-slate-900 my-8">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-              <h3 className="text-base font-extrabold text-slate-950 flex items-center gap-2">
-                <ShoppingBag className="w-5 h-5 text-emerald-600" />
-                <span>{editingProduct ? 'Edit Product Details' : 'Upload & Add New Product'}</span>
-              </h3>
-              <button onClick={() => setIsAddProductOpen(false)} className="p-2 text-slate-400 hover:text-slate-950">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveProduct} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-              {/* Cloudinary Multi Image Uploader */}
-              <MultiImageUploader
-                currentImages={productImages}
-                onUploadSuccess={(urls) => setProductImages(urls)}
-                label="Product Images (Uploads directly to Cloudinary CDN, Max 5) *"
-                maxImages={5}
-              />
-
-              {/* Cloudinary Video Uploader */}
-              <VideoUploader
-                currentVideoUrl={productVideo}
-                onUploadSuccess={(url) => setProductVideo(url || '')}
-              />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Product Title *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. iPhone 15 Pro Max"
-                    value={productName}
-                    onChange={(e) => setProductName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Category *</label>
-                  <select
-                    value={productCategory}
-                    onChange={(e) => setProductCategory(e.target.value)}
-                    required
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
-                  >
-                    <option value="" disabled>Select a category</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.slug}>{category.name}</option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => setIsCategoryModalOpen(true)}
-                    className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 hover:text-emerald-800"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Add new category
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Brand Name</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Apple, Samsung, JBL"
-                    value={productBrand}
-                    onChange={(e) => setProductBrand(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Selling Price (₦) *</label>
-                  <input
-                    type="number"
-                    required
-                    placeholder="1350000"
-                    value={productPrice}
-                    onChange={(e) => setProductPrice(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-emerald-600 font-mono font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Original Price (₦)</label>
-                  <input
-                    type="number"
-                    placeholder="1450000"
-                    value={productOriginalPrice}
-                    onChange={(e) => setProductOriginalPrice(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-emerald-600 font-mono"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Description</label>
-                <textarea
-                  rows={3}
-                  placeholder="Detailed product features and specifications..."
-                  value={productDescription}
-                  onChange={(e) => setProductDescription(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
-                />
-              </div>
-
-              <div className="flex items-center gap-6 pt-2">
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={productInStock}
-                    onChange={(e) => setProductInStock(e.target.checked)}
-                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 bg-slate-100 border-slate-300"
-                  />
-                  <span>Product in Stock</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={productIsFeatured}
-                    onChange={(e) => setProductIsFeatured(e.target.checked)}
-                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 bg-slate-100 border-slate-300"
-                  />
-                  <span>Feature on Homepage</span>
-                </label>
-              </div>
-
-              <div className="pt-4 border-t border-slate-200 flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsAddProductOpen(false)}
-                  className="w-1/2 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSavingProduct}
-                  className="w-1/2 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-2"
-                >
-                  {isSavingProduct ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Saving Product...</span>
-                    </>
-                  ) : (
-                    <span>{editingProduct ? 'Update Product' : 'Upload Product'}</span>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* 3. PRODUCT CREATE / EDIT MODAL */}
+      {isProductFormOpen && (
+        <ProductFormModal
+          key={editingProduct?.id || 'new'}
+          product={editingProduct}
+          categories={categories}
+          brandSuggestions={Array.from(new Set([...storeConfig.brands, ...products.map((p) => p.brand || '')].filter(Boolean))).sort()}
+          currencySymbol={storeConfig.currencySymbol}
+          onClose={() => {
+            setIsProductFormOpen(false);
+            setEditingProduct(null);
+          }}
+          onSaved={handleProductSaved}
+          onRequestNewCategory={() => setIsCategoryModalOpen(true)}
+          notify={showToast}
+        />
       )}
 
       {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md">
-          <form onSubmit={handleCreateCategory} className="bg-white border border-slate-200 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-extrabold text-slate-950">Add Category</h3>
-              <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="p-2 text-slate-400 hover:text-slate-950" aria-label="Close category dialog">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Category name *</label>
-              <input
-                required
-                value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value)}
-                placeholder="e.g. Smart Watches"
-                className="w-full px-3.5 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-emerald-600"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Description</label>
-              <textarea
-                value={newCategoryDescription}
-                onChange={(e) => setNewCategoryDescription(e.target.value)}
-                placeholder="What belongs in this category?"
-                rows={3}
-                className="w-full px-3.5 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-emerald-600"
-              />
-            </div>
-            <div className="space-y-2 border-t border-slate-100 pt-4">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Existing categories</p>
-              <div className="max-h-40 space-y-2 overflow-y-auto">
-                {categories.map((category) => (
-                  <div key={category.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-bold text-slate-800">{category.name}</p>
-                      <p className="text-[10px] text-slate-500">{category.itemCount} product{category.itemCount === 1 ? '' : 's'}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteCategory(category.id, category.name, category.itemCount)}
-                      disabled={category.itemCount > 0}
-                      className="shrink-0 rounded-lg p-2 text-rose-600 transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-30"
-                      title={category.itemCount > 0 ? 'Remove products before deleting this category' : 'Delete category'}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="flex gap-3 pt-2">
-              <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="w-1/2 py-3 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm">Cancel</button>
-              <button type="submit" disabled={isSavingCategory} className="w-1/2 py-3 rounded-xl bg-emerald-600 text-white font-extrabold text-sm disabled:opacity-60">
-                {isSavingCategory ? 'Creating...' : 'Create Category'}
-              </button>
-            </div>
-          </form>
-        </div>
+        <CategoryEditorDialog
+          category={null}
+          onClose={() => setIsCategoryModalOpen(false)}
+          onSaved={async () => {
+            setIsCategoryModalOpen(false);
+            await fetchCategories();
+          }}
+          notify={showToast}
+        />
       )}
 
       {isUploadSuccessOpen && (
@@ -1632,7 +1032,7 @@ export default function AdminPage() {
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 type="button"
-                onClick={() => { setIsUploadSuccessOpen(false); resetProductForm(); setIsAddProductOpen(true); }}
+                onClick={() => { setIsUploadSuccessOpen(false); openNewProduct(); }}
                 className="w-full py-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 font-extrabold text-sm"
               >
                 Upload New Product

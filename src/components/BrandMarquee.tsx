@@ -1,45 +1,28 @@
 'use client';
 
 import React from 'react';
-import { useStore } from '@/context/StoreContext';
 
+const MISSION_STATEMENT =
+  'G Naath exists to redefine trust in commerce—delivering only genuine, certified and exceptional products, with uncompromising standards that build lasting confidence and a legacy across Africa and the world.';
+
+/** Continuously scrolling mission statement shown just below the hero. */
 export const BrandMarquee: React.FC = () => {
-  const { storeConfig, setSelectedCategory, setSearchQuery } = useStore();
-
-  const handleBrandClick = (brandName: string) => {
-    setSelectedCategory('all');
-    setSearchQuery(brandName);
-    const catalogElement = document.getElementById('catalog');
-    if (catalogElement) {
-      catalogElement.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const renderBrand = (brand: string, duplicate = false) => (
-    <li key={`${duplicate ? 'duplicate-' : ''}${brand}`}>
-      <button
-        onClick={() => handleBrandClick(brand)}
-        className="shrink-0 whitespace-nowrap rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
-        title={`View ${brand} products`}
-        tabIndex={duplicate ? -1 : undefined}
-      >
-        {brand}
-      </button>
+  const renderStatement = (duplicate = false) => (
+    <li key={duplicate ? 'duplicate' : 'original'} className="flex shrink-0 items-center gap-6 pr-6">
+      <span className="whitespace-nowrap font-heading text-base font-semibold tracking-tight text-ink-900 sm:text-lg">
+        {MISSION_STATEMENT}
+      </span>
+      <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" aria-hidden="true" />
     </li>
   );
 
   return (
-    <section
-      className="border-y border-slate-200 bg-gradient-to-r from-slate-50 via-white to-slate-50 py-6"
-      aria-label="Product brands"
-    >
+    <section className="border-y border-slate-200 bg-linear-to-r from-slate-50 via-white to-slate-50 py-5" aria-label="Our mission">
       <div className="marquee-viewport">
-        <div className="marquee-track">
-          <ul className="marquee-group">
-            {storeConfig.brands.map((brand) => renderBrand(brand))}
-          </ul>
+        <div className="marquee-track" style={{ animationDuration: '45s' }}>
+          <ul className="marquee-group">{renderStatement()}</ul>
           <ul className="marquee-group marquee-duplicate" aria-hidden="true">
-            {storeConfig.brands.map((brand) => renderBrand(brand, true))}
+            {renderStatement(true)}
           </ul>
         </div>
       </div>

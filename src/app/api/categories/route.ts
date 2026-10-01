@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { resolveCategoryIcon } from '@/lib/categoryIntelligence';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,9 +25,9 @@ export async function GET() {
           id: category.id,
           name: category.name,
           slug: category.slug,
-          iconName: category.iconName || 'LayoutGrid',
+          iconName: resolveCategoryIcon(category.iconName, category.name, category.description || ''),
           description: category.description || '',
-          image: category.products[0]?.image || category.products[0]?.images[0] || '',
+          image: category.image || category.products[0]?.image || category.products[0]?.images[0] || '',
           itemCount: category._count.products,
         })),
       },

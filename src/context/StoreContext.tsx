@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { CartItem, CustomerDetails, Product, StoreConfig } from '@/types/ecommerce';
 import { DEFAULT_STORE_CONFIG } from '@/data/storeCatalog';
 
@@ -23,12 +23,14 @@ interface StoreContextType {
   // Products
   products: Product[];
   isLoadingProducts: boolean;
-  refreshProducts: () => Promise<void>;
+  refreshProducts: (options?: { silent?: boolean }) => Promise<void>;
 
   // Config & Details
   config: StoreConfig;
   storeConfig: StoreConfig;
-  updateConfig: (newConfig: Partial<StoreConfig>) => void;
+  /** Saves settings to the database (admins only). Resolves true when saved. */
+  updateConfig: (newConfig: Partial<StoreConfig>) => Promise<boolean>;
+  refreshConfig: () => Promise<void>;
   customerDetails: CustomerDetails;
   setCustomerDetails: React.Dispatch<React.SetStateAction<CustomerDetails>>;
   updateCustomerDetails: (details: Partial<CustomerDetails>) => void;
@@ -142,44 +144,106 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     checkAuthStatus();
   }, []);
 
-  // Fetch products from database
-  const refreshProducts = async () => {
+  // Fetch products from database. Silent refreshes keep the current list on failure.
+  const refreshProducts = async (options: { silent?: boolean } = {}) => {
     try {
-      setIsLoadingProducts(true);
+      if (!options.silent) setIsLoadingProducts(true);
       const res = await fetch('/api/products', { cache: 'no-store' });
       const data = await res.json();
       if (!res.ok || !data.success || !Array.isArray(data.products)) {
         throw new Error(data.error || 'Failed to load products.');
       }
-      setProducts(data.products);
+      applyFreshProducts(data.products);
     } catch (err) {
       console.error('Error fetching products from API:', err);
-      setProducts([]);
-      showToast(err instanceof Error ? err.message : 'Failed to load products.');
+      if (!options.silent) {
+        setProducts([]);
+        showToast(err instanceof Error ? err.message : 'Failed to load products.');
+      }
     } finally {
-      setIsLoadingProducts(false);
+      if (!options.silent) setIsLoadingProducts(false);
     }
+  };
+
+  /** Pushes fresh product data everywhere a shopper can see it: grid, open popup and cart. */
+  const applyFreshProducts = (fresh: Product[]) => {
+    setProducts(fresh);
+    const byId = new Map(fresh.map((p) => [p.id, p]));
+    setCart((prev) =>
+      prev.map((item) => {
+        const latest = byId.get(item.product.id);
+        return latest ? { ...item, product: latest } : { ...item, product: { ...item.product, inStock: false } };
+      })
+    );
+    setActiveProductModal((current) => (current ? byId.get(current.id) || { ...current, inStock: false } : current));
   };
 
   useEffect(() => {
     refreshProducts();
   }, []);
 
+  // Live availability: re-check every 45s while the tab is visible and when the shopper returns,
+  // so "Out of stock" / "Pre-order" changes made by an admin appear without reloading the page.
+  const productsRef = useRef<Product[]>([]);
+  useEffect(() => {
+    productsRef.current = products;
+  }, [products]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const syncAvailability = async () => {
+      if (document.visibilityState !== 'visible' || productsRef.current.length === 0) return;
+      try {
+        const res = await fetch('/api/products/availability', { cache: 'no-store' });
+        const data = await res.json();
+        if (cancelled || !res.ok || !data.success || !Array.isArray(data.products)) return;
+
+        const current = productsRef.current;
+        const snapshot = new Map<string, Partial<Product>>(
+          data.products.map((p: Partial<Product> & { id: string }) => [p.id, p])
+        );
+        // New or removed products need the full catalogue; otherwise merge the small snapshot.
+        if (snapshot.size !== current.length || current.some((p) => !snapshot.has(p.id))) {
+          await refreshProducts({ silent: true });
+          return;
+        }
+        const changed = current.some((p) => {
+          const s = snapshot.get(p.id)!;
+          return (
+            s.inStock !== p.inStock ||
+            Boolean(s.isPreorder) !== Boolean(p.isPreorder) ||
+            (s.preorderNote ?? null) !== (p.preorderNote ?? null) ||
+            (s.stockQuantity ?? null) !== (p.stockQuantity ?? null) ||
+            s.price !== p.price ||
+            (s.originalPrice ?? null) !== (p.originalPrice ?? null)
+          );
+        });
+        if (changed) applyFreshProducts(current.map((p) => ({ ...p, ...snapshot.get(p.id) })));
+      } catch {
+        // Offline or a blip: try again on the next tick.
+      }
+    };
+
+    const timer = window.setInterval(syncAvailability, 45_000);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') syncAvailability();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
+  }, []);
+
   // Load saved state from localStorage on mount
   useEffect(() => {
     try {
-      const savedConfig = localStorage.getItem('gnaath_store_config');
-      if (savedConfig) {
-        const parsedConfig = JSON.parse(savedConfig);
-        setConfig({
-          ...DEFAULT_STORE_CONFIG,
-          ...parsedConfig,
-          logoUrl:
-            parsedConfig.logoUrl === '/gnaathcommlogo.png'
-              ? DEFAULT_STORE_CONFIG.logoUrl
-              : parsedConfig.logoUrl || DEFAULT_STORE_CONFIG.logoUrl,
-        });
-      }
+      // Settings now live in the database; drop the old per-browser copy so it can't mask them.
+      localStorage.removeItem('gnaath_store_config');
 
       const savedCart = localStorage.getItem('gnaath_cart');
       if (savedCart) setCart(JSON.parse(savedCart));
@@ -207,11 +271,36 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('gnaath_customer', JSON.stringify(customerDetails));
   }, [customerDetails]);
 
-  const updateConfig = (newConfig: Partial<StoreConfig>) => {
-    const updated = { ...config, ...newConfig };
-    setConfig(updated);
-    localStorage.setItem('gnaath_store_config', JSON.stringify(updated));
-    showToast('Store settings updated successfully!');
+  const refreshConfig = async () => {
+    try {
+      const res = await fetch('/api/store-config', { cache: 'no-store' });
+      const data = await res.json();
+      if (data.success && data.config) setConfig({ ...DEFAULT_STORE_CONFIG, ...data.config });
+    } catch {
+      // Keep the built-in defaults; the storefront still works.
+    }
+  };
+
+  useEffect(() => {
+    refreshConfig();
+  }, []);
+
+  const updateConfig = async (newConfig: Partial<StoreConfig>) => {
+    try {
+      const res = await fetch('/api/store-config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newConfig),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Could not save store settings.');
+      setConfig({ ...DEFAULT_STORE_CONFIG, ...data.config });
+      showToast('Store settings saved for everyone');
+      return true;
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Could not save store settings.');
+      return false;
+    }
   };
 
   const updateCustomerDetails = (details: Partial<CustomerDetails>) => {
@@ -219,6 +308,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addToCart = (product: Product, quantity = 1, options: Record<string, string> = {}) => {
+    if (!product.inStock) {
+      showToast(`${product.name} is currently out of stock`);
+      return;
+    }
     const optionKeys = Object.keys(options).sort();
     const optionsSlug = optionKeys.map((k) => `${k}:${options[k]}`).join('|');
     const itemId = `${product.id}_${optionsSlug}`;
@@ -300,6 +393,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         config,
         storeConfig: config,
         updateConfig,
+        refreshConfig,
         customerDetails,
         setCustomerDetails,
         updateCustomerDetails,

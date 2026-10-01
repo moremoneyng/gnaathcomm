@@ -1,11 +1,15 @@
+import { createHash } from 'node:crypto';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.ADMIN_JWT_SECRET || 'gnaath_global_communications_admin_secret_key_2026'
-);
+import { prisma } from '@/lib/prisma';
+import { getSessionSecret } from '@/lib/sessionSecret';
 
 const COOKIE_NAME = 'gnaath_admin_token';
+const SESSION_HOURS = 24 * 7;
+
+function adminSecret() {
+  return getSessionSecret('admin', process.env.ADMIN_JWT_SECRET);
+}
 
 export interface AdminSessionPayload {
   id: string;
@@ -14,12 +18,17 @@ export interface AdminSessionPayload {
   role: string;
 }
 
-export async function createAdminSession(payload: AdminSessionPayload) {
-  const token = await new SignJWT({ ...payload })
+/** Short fingerprint of the stored hash: changing the password revokes every older session. */
+export function passwordVersion(passwordHash: string) {
+  return createHash('sha256').update(passwordHash).digest('hex').slice(0, 16);
+}
+
+export async function createAdminSession(payload: AdminSessionPayload, passwordHash: string) {
+  const token = await new SignJWT({ ...payload, pv: passwordVersion(passwordHash) })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('7d')
-    .sign(JWT_SECRET);
+    .setExpirationTime(`${SESSION_HOURS}h`)
+    .sign(adminSecret());
 
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
@@ -27,27 +36,30 @@ export async function createAdminSession(payload: AdminSessionPayload) {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * SESSION_HOURS,
   });
 
   return token;
 }
 
+/**
+ * Returns the signed-in admin, re-checked against the database on every call so that
+ * deleted admins and changed passwords take effect immediately.
+ */
 export async function getAdminSession(): Promise<AdminSessionPayload | null> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get(COOKIE_NAME)?.value;
-
     if (!token) return null;
 
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-    return {
-      id: payload.id as string,
-      email: payload.email as string,
-      name: payload.name as string,
-      role: payload.role as string,
-    };
-  } catch (error) {
+    const { payload } = await jwtVerify(token, adminSecret());
+    if (typeof payload.id !== 'string' || typeof payload.pv !== 'string') return null;
+
+    const admin = await prisma.adminUser.findUnique({ where: { id: payload.id } });
+    if (!admin || passwordVersion(admin.password) !== payload.pv) return null;
+
+    return { id: admin.id, email: admin.email, name: admin.name, role: admin.role };
+  } catch {
     return null;
   }
 }

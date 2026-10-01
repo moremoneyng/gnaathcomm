@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAdminSession } from '@/lib/auth';
+import { LOW_STOCK_THRESHOLD } from '@/lib/productInput';
 
 export async function GET() {
   try {
@@ -36,6 +37,9 @@ export async function GET() {
     const inStockCount = products.filter((p) => p.inStock).length;
     const outOfStockCount = products.filter((p) => !p.inStock).length;
     const featuredCount = products.filter((p) => p.isFeatured).length;
+    const lowStockCount = products.filter(
+      (p) => p.stockQuantity !== null && p.stockQuantity > 0 && p.stockQuantity <= LOW_STOCK_THRESHOLD
+    ).length;
 
     // Categories breakdown
     const categories = await prisma.category.findMany({
@@ -68,6 +72,7 @@ export async function GET() {
         inStockCount,
         outOfStockCount,
         featuredCount,
+        lowStockCount,
         repairCount,
         solarCount,
         branchMetrics: {

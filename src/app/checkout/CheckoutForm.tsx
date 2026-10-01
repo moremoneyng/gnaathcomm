@@ -6,9 +6,12 @@ import { useState } from 'react';
 import { ArrowLeft, LoaderCircle, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { useStore } from '@/context/StoreContext';
 import { formatCurrency } from '@/utils/whatsapp';
+import { AvailabilityBadge } from '@/components/AvailabilityBadge';
 
 export function CheckoutForm() {
   const { cart, cartSubtotal, customerDetails, setCustomerDetails, storeConfig } = useStore();
+  const unavailableItems = cart.filter((item) => !item.product.inStock);
+  const hasPreorder = cart.some((item) => item.product.inStock && item.product.isPreorder);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -96,7 +99,18 @@ export function CheckoutForm() {
               </label>
             </div>
             {error && <p role="alert" className="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</p>}
-            <button disabled={isSubmitting} className="mt-7 flex w-full items-center justify-center gap-2 rounded-full bg-emerald-700 px-6 py-4 text-sm font-black text-white shadow-lg transition hover:bg-emerald-600 disabled:cursor-wait disabled:opacity-70">
+            {unavailableItems.length > 0 && (
+              <p role="alert" className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-700">
+                {unavailableItems.map((item) => item.product.name).join(', ')} {unavailableItems.length === 1 ? 'is' : 'are'} now
+                out of stock. Remove {unavailableItems.length === 1 ? 'it' : 'them'} from your cart to continue.
+              </p>
+            )}
+            {hasPreorder && (
+              <p className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                Your cart includes pre-order items. You pay now and we ship them as soon as they arrive; we&apos;ll keep you updated.
+              </p>
+            )}
+            <button disabled={isSubmitting || unavailableItems.length > 0} className="mt-7 flex w-full items-center justify-center gap-2 rounded-full bg-emerald-700 px-6 py-4 text-sm font-black text-white shadow-lg transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60">
               {isSubmitting ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <LockKeyhole className="h-5 w-5" />}
               {isSubmitting ? 'Opening secure checkout…' : 'Pay securely with Flutterwave'}
             </button>
@@ -114,6 +128,7 @@ export function CheckoutForm() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold">{item.product.name}</p>
                     <p className="mt-1 text-xs text-slate-400">Quantity {item.quantity}</p>
+                    <div className="mt-1"><AvailabilityBadge product={item.product} tone="dark" /></div>
                   </div>
                   <p className="text-sm font-black">{formatCurrency(item.product.price * item.quantity, storeConfig.currencySymbol)}</p>
                 </div>

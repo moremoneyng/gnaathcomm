@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { LockKeyhole, Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 import { useStore } from '@/context/StoreContext';
 import { formatCurrency } from '@/utils/whatsapp';
+import { AvailabilityBadge } from '@/components/AvailabilityBadge';
 
 export function CartDrawer() {
   const {
@@ -56,6 +57,7 @@ export function CartDrawer() {
                       <div className="min-w-0 flex-1">
                         <h4 className="truncate text-xs font-bold">{item.product.name}</h4>
                         {options && <p className="mt-0.5 truncate text-[10px] text-slate-500">{options}</p>}
+                        <div className="mt-1"><AvailabilityBadge product={item.product} /></div>
                         <p className="mt-1 text-xs font-black text-emerald-700">{formatCurrency(item.product.price, storeConfig.currencySymbol)}</p>
                       </div>
                       <div className="flex items-center gap-1 rounded-lg border border-slate-300 bg-white p-1">

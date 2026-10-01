@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
 import { uploadToCloudinary } from '@/lib/cloudinary';
+import { getAdminSession } from '@/lib/auth';
 
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024; // 50MB limit to support short videos
+const ALLOWED_MEDIA = /^data:(image|video)\/[a-z0-9.+-]+;base64,/i;
 
 export async function POST(request: Request) {
   try {
+    const session = await getAdminSession();
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Unauthorized admin access' }, { status: 401 });
+    }
+
     const contentType = request.headers.get('content-type') || '';
 
     let fileData: string = '';
@@ -29,14 +36,18 @@ export async function POST(request: Request) {
       fileData = `data:${mimeType};base64,${buffer.toString('base64')}`;
     } else {
       const body = await request.json();
-      fileData = body.file || body.image;
+      fileData = typeof (body.file || body.image) === 'string' ? body.file || body.image : '';
     }
 
     if (!fileData) {
       return NextResponse.json({ success: false, error: 'Missing file data' }, { status: 400 });
     }
 
-    const resourceType = fileData.match(/^data:(video)\//) ? 'video' : 'auto';
+    if (!ALLOWED_MEDIA.test(fileData)) {
+      return NextResponse.json({ success: false, error: 'Only image and video files can be uploaded.' }, { status: 415 });
+    }
+
+    const resourceType = fileData.match(/^data:(video)\//i) ? 'video' : 'image';
     const uploadResult = await uploadToCloudinary(fileData, 'gnaath_communications', resourceType);
 
     return NextResponse.json({
@@ -46,7 +57,6 @@ export async function POST(request: Request) {
     });
   } catch (error: unknown) {
     console.error('API /api/upload error:', error);
-    const message = error instanceof Error ? error.message : 'Upload failed';
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Upload failed. Please try again.' }, { status: 500 });
   }
 }

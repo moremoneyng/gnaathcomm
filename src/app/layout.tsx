@@ -1,20 +1,21 @@
 import type { Metadata } from 'next';
-import { Inter, Outfit } from 'next/font/google';
+import { Plus_Jakarta_Sans, Sora } from 'next/font/google';
 import './globals.css';
 import { StoreProvider } from '@/context/StoreContext';
 import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { ToastNotification } from '@/components/ToastNotification';
 
-const inter = Inter({
+// Body: Plus Jakarta Sans (refined, highly legible). Headings: Sora (crisp, modern tech character).
+const bodyFont = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-body',
   display: 'swap',
 });
 
-const outfit = Outfit({
+const displayFont = Sora({
   subsets: ['latin'],
-  variable: '--font-outfit',
+  variable: '--font-display',
   display: 'swap',
 });
 
@@ -66,7 +67,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`light ${inter.variable} ${outfit.variable}`}
+      className={`light ${bodyFont.variable} ${displayFont.variable}`}
     >
       <body
         suppressHydrationWarning

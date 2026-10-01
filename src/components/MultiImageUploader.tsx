@@ -1,15 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { UploadCloud, Loader2, AlertCircle, X } from 'lucide-react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import Image from 'next/image';
+import { UploadCloud, Loader2, AlertCircle, ChevronLeft, ChevronRight, Star, Trash2, Undo2, ImagePlus } from 'lucide-react';
 import { compressImage } from '@/utils/compressImage';
 
 interface MultiImageUploaderProps {
   currentImages?: string[];
+  /** Called with the full, ordered image list after every upload, removal or reorder. */
   onUploadSuccess: (secureUrls: string[]) => void;
   label?: string;
   maxImages?: number;
+  /** Shown under the grid, e.g. to explain that changes apply on save. */
+  hint?: string;
 }
 
 export function MultiImageUploader({
@@ -17,125 +20,252 @@ export function MultiImageUploader({
   onUploadSuccess,
   label = 'Upload Product Images (Up to 5)',
   maxImages = 5,
+  hint,
 }: MultiImageUploaderProps) {
-  const [uploading, setUploading] = useState(false);
-  const [previews, setPreviews] = useState<string[]>(currentImages);
+  const inputId = useId();
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lastRemoved, setLastRemoved] = useState<{ url: string; index: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
+  // Uploads are sequential; always build on the newest list so removals during an upload stick.
+  const imagesRef = useRef(currentImages);
   useEffect(() => {
-    setPreviews(currentImages);
+    imagesRef.current = currentImages;
   }, [currentImages]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
+  const update = (next: string[]) => {
+    imagesRef.current = next;
+    onUploadSuccess(next);
+  };
 
-    if (previews.length + files.length > maxImages) {
-      setError(`You can only upload a maximum of ${maxImages} images.`);
+  const uploadFiles = async (files: File[]) => {
+    const images = files.filter((file) => file.type.startsWith('image/'));
+    if (!images.length) {
+      setError('Please choose image files (JPG, PNG or WebP).');
       return;
     }
 
-    setError(null);
-    setUploading(true);
+    const room = maxImages - imagesRef.current.length;
+    if (room <= 0) {
+      setError(`This product already has the maximum of ${maxImages} images. Remove one first.`);
+      return;
+    }
 
-    try {
-      const newUrls: string[] = [];
+    const queue = images.slice(0, room);
+    setError(images.length > room ? `Only ${room} more image${room === 1 ? '' : 's'} can be added (max ${maxImages}).` : null);
+    setLastRemoved(null);
+    setUploadProgress({ done: 0, total: queue.length });
 
-      for (const file of files) {
+    for (const [index, file] of queue.entries()) {
+      try {
         const compressedFile = await compressImage(file);
         const formData = new FormData();
         formData.append('file', compressedFile);
 
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
+        const response = await fetch('/api/upload', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.success && data.url) {
-          newUrls.push(data.url);
-        } else {
+        if (!response.ok || !data.success || !data.url) {
           throw new Error(data.error || 'Failed to upload image');
         }
+        update([...imagesRef.current, data.url]);
+      } catch (err: unknown) {
+        setError(`${file.name}: ${err instanceof Error ? err.message : 'Upload error'}`);
+      } finally {
+        setUploadProgress({ done: index + 1, total: queue.length });
       }
-
-      const updatedPreviews = [...previews, ...newUrls];
-      setPreviews(updatedPreviews);
-      onUploadSuccess(updatedPreviews);
-    } catch (err: any) {
-      setError(err.message || 'Upload error');
-    } finally {
-      setUploading(false);
-      e.target.value = '';
     }
+
+    setUploadProgress(null);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (files.length) await uploadFiles(files);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (uploadProgress) return;
+    await uploadFiles(Array.from(e.dataTransfer.files || []));
   };
 
   const removeImage = (index: number) => {
-    const updatedPreviews = previews.filter((_, i) => i !== index);
-    setPreviews(updatedPreviews);
-    onUploadSuccess(updatedPreviews);
+    const list = imagesRef.current;
+    setLastRemoved({ url: list[index], index });
+    setError(null);
+    update(list.filter((_, i) => i !== index));
   };
+
+  const undoRemove = () => {
+    if (!lastRemoved) return;
+    const list = [...imagesRef.current];
+    if (list.length >= maxImages || list.includes(lastRemoved.url)) {
+      setLastRemoved(null);
+      return;
+    }
+    list.splice(Math.min(lastRemoved.index, list.length), 0, lastRemoved.url);
+    update(list);
+    setLastRemoved(null);
+  };
+
+  const moveImage = (from: number, to: number) => {
+    const list = [...imagesRef.current];
+    if (to < 0 || to >= list.length) return;
+    const [item] = list.splice(from, 1);
+    list.splice(to, 0, item);
+    update(list);
+  };
+
+  const isUploading = uploadProgress !== null;
+  const canAddMore = currentImages.length < maxImages;
 
   return (
     <div className="space-y-2">
       {label && (
-        <div className="flex justify-between items-center">
-          <label className="block text-xs font-semibold text-slate-700">{label}</label>
-          <span className="text-xs text-slate-500">{previews.length}/{maxImages}</span>
+        <div className="flex items-center justify-between gap-3">
+          <label htmlFor={inputId} className="block text-xs font-bold text-slate-700">
+            {label}
+          </label>
+          <span className="shrink-0 text-xs font-semibold text-slate-500">
+            {currentImages.length}/{maxImages}
+          </span>
         </div>
       )}
 
-      <div className="flex flex-col gap-4 p-4 bg-slate-50 border border-dashed border-slate-300 rounded-2xl">
-        <div className="flex flex-wrap gap-3">
-          {previews.map((url, index) => (
-            <div key={index} className="relative w-20 h-20 rounded-xl overflow-hidden bg-white border border-slate-200 shrink-0 group">
-              <Image src={url} alt={`Preview ${index + 1}`} fill className="object-contain p-1" />
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          if (canAddMore) setIsDragging(true);
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={handleDrop}
+        className={`rounded-2xl border-2 border-dashed p-3 transition sm:p-4 ${
+          isDragging ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-slate-50'
+        }`}
+      >
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+          {currentImages.map((url, index) => (
+            <div key={url} className="group relative aspect-square overflow-hidden rounded-xl bg-white ring-1 ring-slate-200">
+              <Image src={url} alt={`Image ${index + 1}`} fill sizes="140px" className="object-contain p-1.5" />
+
+              {index === 0 && maxImages > 1 && (
+                <span className="absolute left-1.5 top-1.5 rounded-full bg-ink-900 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-white">
+                  Cover
+                </span>
+              )}
+
               <button
                 type="button"
                 onClick={() => removeImage(index)}
-                className="absolute top-1 right-1 bg-rose-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label={`Remove image ${index + 1}`}
+                title="Remove image"
+                className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-rose-600 text-white shadow-md transition hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
               >
-                <X className="w-3 h-3" />
+                <Trash2 className="h-3.5 w-3.5" />
               </button>
+
+              {currentImages.length > 1 && (
+                <div className="absolute inset-x-1.5 bottom-1.5 flex items-center justify-between gap-1 rounded-full bg-white/95 p-0.5 shadow-sm ring-1 ring-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => moveImage(index, index - 1)}
+                    disabled={index === 0}
+                    aria-label={`Move image ${index + 1} left`}
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 disabled:opacity-25"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                  </button>
+                  {index !== 0 && (
+                    <button
+                      type="button"
+                      onClick={() => moveImage(index, 0)}
+                      aria-label={`Make image ${index + 1} the cover`}
+                      title="Make cover image"
+                      className="flex h-6 items-center gap-0.5 rounded-full px-1.5 text-[9px] font-bold text-amber-600 hover:bg-amber-50"
+                    >
+                      <Star className="h-3 w-3" />
+                      <span className="hidden sm:inline">Cover</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => moveImage(index, index + 1)}
+                    disabled={index === currentImages.length - 1}
+                    aria-label={`Move image ${index + 1} right`}
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 disabled:opacity-25"
+                  >
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
-          
-          {previews.length < maxImages && (
-            <div className="w-20 h-20 rounded-xl bg-slate-200/60 flex items-center justify-center text-slate-400 shrink-0 border-2 border-dashed border-slate-300">
-              <label
-                htmlFor="multi-cloudinary-file-input"
-                className="cursor-pointer w-full h-full flex flex-col items-center justify-center hover:bg-slate-200 transition-colors rounded-xl"
-              >
-                {uploading ? (
-                  <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
-                ) : (
-                  <UploadCloud className="w-6 h-6" />
-                )}
-              </label>
-            </div>
+
+          {canAddMore && (
+            <label
+              htmlFor={inputId}
+              className={`flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-slate-300 bg-white text-center text-slate-500 transition hover:border-emerald-500 hover:text-emerald-600 ${
+                isUploading ? 'pointer-events-none opacity-70' : ''
+              }`}
+            >
+              {uploadProgress ? (
+                <>
+                  <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
+                  <span className="text-[10px] font-bold">
+                    {uploadProgress.done}/{uploadProgress.total}
+                  </span>
+                </>
+              ) : currentImages.length === 0 ? (
+                <>
+                  <UploadCloud className="h-6 w-6" />
+                  <span className="px-1 text-[10px] font-bold">Add photos</span>
+                </>
+              ) : (
+                <>
+                  <ImagePlus className="h-6 w-6" />
+                  <span className="text-[10px] font-bold">Add more</span>
+                </>
+              )}
+            </label>
           )}
         </div>
 
-        <div className="flex-1 min-w-0 space-y-2 text-center sm:text-left">
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleFileChange}
-            disabled={uploading || previews.length >= maxImages}
-            id="multi-cloudinary-file-input"
-            className="hidden"
-          />
+        <input
+          type="file"
+          accept="image/*"
+          multiple={maxImages > 1}
+          onChange={handleFileChange}
+          disabled={isUploading || !canAddMore}
+          id={inputId}
+          className="sr-only"
+        />
 
-          {error && (
-            <p className="text-xs text-rose-600 font-semibold flex items-center gap-1">
-              <AlertCircle className="w-3.5 h-3.5" />
-              <span>{error}</span>
-            </p>
-          )}
-        </div>
+        <p className="mt-3 text-[11px] text-slate-500">
+          {hint ||
+            (maxImages > 1
+              ? 'Drag photos here or tap “Add”. The first image is the cover shown in the shop. Use the arrows to reorder.'
+              : 'Drag an image here or tap to upload.')}
+        </p>
       </div>
+
+      {lastRemoved && (
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-ink-900 px-3.5 py-2.5 text-xs text-white">
+          <span>Image removed.</span>
+          <button type="button" onClick={undoRemove} className="inline-flex items-center gap-1 font-bold text-brand-green hover:text-white">
+            <Undo2 className="h-3.5 w-3.5" /> Undo
+          </button>
+        </div>
+      )}
+
+      {error && (
+        <p className="flex items-start gap-1.5 text-xs font-semibold text-rose-600" role="alert">
+          <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>{error}</span>
+        </p>
+      )}
     </div>
   );
 }

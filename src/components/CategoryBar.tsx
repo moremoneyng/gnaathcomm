@@ -1,114 +1,107 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { CATEGORIES as DEFAULT_CATEGORIES } from '@/data/storeCatalog';
-import { LayoutGrid, Smartphone, Plug, Headphones, Video, Sun } from 'lucide-react';
-
-const ICON_MAP: Record<string, React.ElementType> = {
-  LayoutGrid,
-  Smartphone,
-  Plug,
-  Headphones,
-  Video,
-  Sun,
-};
+import { useCategories } from '@/hooks/useCategories';
+import { CategoryIcon } from './CategoryIcon';
+import { ArrowRight, LayoutGrid } from 'lucide-react';
 
 export function CategoryBar() {
-  const { selectedCategory, setSelectedCategory } = useStore();
-  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const { selectedCategory, setSelectedCategory, products } = useStore();
+  const { categories, isLoading } = useCategories();
 
-  useEffect(() => {
-    fetch('/api/categories', { cache: 'no-store' })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
-          setCategories([
-            {
-              ...DEFAULT_CATEGORIES[0],
-              itemCount: data.categories.reduce((sum: number, category: { itemCount: number }) => sum + category.itemCount, 0),
-            },
-            ...data.categories,
-          ]);
-        }
-      })
-      .catch(() => undefined);
-  }, []);
+  const tileBase =
+    'group relative flex h-32 w-[8.5rem] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-2xl p-3 text-left transition duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 sm:h-40 sm:w-auto';
 
   return (
-    <div className="py-6 sm:py-8">
-      <div className="flex items-center justify-between mb-4 sm:mb-6">
+    <div>
+      <div className="mb-4 flex items-end justify-between gap-4 sm:mb-6">
         <div>
-          <h2 className="font-heading text-xl sm:text-2xl font-black text-slate-950 tracking-tight">Explore Products</h2>
-          <p className="text-xs text-slate-500 mt-0.5 sm:mt-1 font-medium">
-            Technology, appliances, mobility, solar energy, accessories and more
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-emerald-600">Shop by category</p>
+          <h2 className="mt-1 font-heading text-2xl font-black tracking-tight text-ink-900 sm:text-3xl">
+            Find exactly what you need
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Technology, appliances, mobility, solar energy, accessories and more.
           </p>
         </div>
+        <Link
+          href="/shop"
+          className="hidden shrink-0 items-center gap-1.5 text-sm font-bold text-ink-900 transition hover:text-emerald-700 sm:inline-flex"
+        >
+          Browse the full shop <ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
 
-      {/* Five columns on phones, expanding to eight on large screens. */}
-      <div className="grid grid-cols-5 gap-1.5 sm:gap-2 lg:grid-cols-8 lg:gap-3">
-        {categories.map((category) => {
-          const IconComponent = ICON_MAP[category.iconName] || LayoutGrid;
-          const isSelected = selectedCategory === category.slug;
+      <div
+        className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-6"
+        role="group"
+        aria-label="Product categories"
+      >
+        <button
+          type="button"
+          onClick={() => setSelectedCategory('all')}
+          aria-pressed={selectedCategory === 'all'}
+          className={`${tileBase} ${
+            selectedCategory === 'all'
+              ? 'bg-ink-900 text-white shadow-lg shadow-ink-900/25'
+              : 'bg-canvas text-ink-900 ring-1 ring-slate-200 hover:ring-emerald-300'
+          }`}
+        >
+          <span
+            className={`flex h-9 w-9 items-center justify-center rounded-xl ${
+              selectedCategory === 'all' ? 'bg-white/10 text-brand-green' : 'bg-white text-emerald-600 shadow-sm'
+            }`}
+          >
+            <LayoutGrid className="h-4.5 w-4.5" />
+          </span>
+          <span>
+            <span className="block text-sm font-extrabold leading-tight">Everything</span>
+            <span className={`text-[11px] font-semibold ${selectedCategory === 'all' ? 'text-white/60' : 'text-slate-500'}`}>
+              {products.length} products
+            </span>
+          </span>
+        </button>
 
-          return (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.slug)}
-              className={`relative flex h-24 flex-col justify-between overflow-hidden rounded-lg border p-1.5 transition-all text-left group sm:h-32 sm:rounded-xl sm:p-2 lg:h-36 ${
-                isSelected
-                  ? 'bg-slate-950 text-white border-slate-900 shadow-lg ring-2 ring-emerald-500/30 scale-[1.02]'
-                  : 'bg-slate-100 text-slate-800 border-slate-200/90 hover:border-emerald-300 hover:shadow-md'
-              }`}
-            >
-              {category.image && (
-                <Image
-                  src={category.image}
-                  alt=""
-                  fill
-                  sizes="(max-width: 1024px) 20vw, 160px"
-                  className={`object-cover transition-transform duration-500 group-hover:scale-105 ${isSelected ? 'opacity-55' : 'opacity-45'}`}
-                />
-              )}
-              <div className={`absolute inset-0 ${isSelected ? 'bg-slate-950/45' : 'bg-slate-950/15'}`} />
-
-              {/* Top Row: Icon + Count Badge */}
-              <div className="relative z-10 flex w-full items-center justify-between">
-                <div
-                  className={`flex h-5 w-5 items-center justify-center rounded-md transition-colors sm:h-7 sm:w-7 sm:rounded-lg ${
-                    isSelected
-                      ? 'bg-emerald-500/20 text-emerald-400'
-                      : 'bg-white text-emerald-600 shadow-sm border border-slate-200/60'
+        {isLoading && categories.length === 0
+          ? Array.from({ length: 5 }, (_, i) => <div key={i} className={`${tileBase} skeleton`} aria-hidden="true" />)
+          : categories.map((category) => {
+              const isSelected = selectedCategory === category.slug;
+              return (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(category.slug)}
+                  aria-pressed={isSelected}
+                  className={`${tileBase} bg-ink-900 text-white ${
+                    isSelected ? 'ring-2 ring-emerald-400 ring-offset-2' : 'hover:-translate-y-0.5 hover:shadow-lg'
                   }`}
                 >
-                  <IconComponent className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                </div>
-                <span
-                  className={`rounded-md px-1 py-0.5 text-[8px] font-black font-mono sm:text-[9px] ${
-                    isSelected
-                      ? 'bg-white/20 text-white'
-                      : 'bg-slate-200 text-slate-700'
-                  }`}
-                >
-                  {category.itemCount}
-                </span>
-              </div>
+                  {category.image && (
+                    <Image
+                      src={category.image}
+                      alt=""
+                      fill
+                      sizes="(max-width: 640px) 140px, (max-width: 1024px) 25vw, 16vw"
+                      className="object-cover opacity-60 transition duration-500 group-hover:scale-110 group-hover:opacity-70"
+                    />
+                  )}
+                  <span className="absolute inset-0 bg-linear-to-t from-ink-950 via-ink-950/50 to-ink-950/10" />
 
-              {/* Bottom Row: Category Name */}
-              <div className="relative z-10 mt-2">
-                <span
-                  className={`block text-[8px] font-bold leading-[1.05] sm:text-[10px] ${
-                    isSelected ? 'text-white' : 'text-slate-900'
-                  }`}
-                >
-                  {category.name}
-                </span>
-              </div>
-            </button>
-          );
-        })}
+                  <span className="relative flex items-center justify-between">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-sm">
+                      <CategoryIcon name={category.iconName} className="h-4.5 w-4.5" />
+                    </span>
+                    <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm">
+                      {category.itemCount}
+                    </span>
+                  </span>
+                  <span className="relative block text-sm font-extrabold leading-tight">{category.name}</span>
+                </button>
+              );
+            })}
       </div>
     </div>
   );

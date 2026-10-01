@@ -85,7 +85,7 @@ export const Navbar: React.FC = () => {
                 width={64}
                 height={64}
                 className="object-contain w-full h-full transform group-hover:scale-105 transition-transform"
-                priority
+                preload
               />
             </div>
           </Link>
@@ -137,26 +137,37 @@ export const Navbar: React.FC = () => {
             {/* Search Bar / Toggle */}
             <div className="relative">
               {showSearchInput ? (
-                <div className="flex items-center bg-slate-100 border border-slate-300 rounded-full px-3 py-1.5 text-xs">
+                <form
+                  role="search"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (pathname !== '/shop') router.push('/shop');
+                  }}
+                  className="flex items-center bg-slate-100 border border-slate-300 rounded-full px-3 py-1.5 text-xs"
+                >
                   <Search className="w-3.5 h-3.5 text-slate-500 mr-2 shrink-0" />
                   <input
                     type="text"
                     autoFocus
                     placeholder="Search JBL, iPhone, Solar..."
+                    aria-label="Search products"
+                    enterKeyHint="search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="bg-transparent text-slate-900 placeholder-slate-500 focus:outline-none w-32 sm:w-48 text-xs"
                   />
                   <button
+                    type="button"
                     onClick={() => {
                       setShowSearchInput(false);
                       setSearchQuery('');
                     }}
+                    aria-label="Close search"
                     className="text-slate-500 hover:text-slate-900 ml-2 text-xs font-bold"
                   >
                     ✕
                   </button>
-                </div>
+                </form>
               ) : (
                 <button
                   onClick={() => setShowSearchInput(true)}

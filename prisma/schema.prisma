@@ -41,6 +41,12 @@ model Product {
   video         String?
   badge         String?
   inStock       Boolean     @default(true)
+  /// Units on hand. NULL means stock is not tracked and `inStock` is managed by hand.
+  stockQuantity Int?
+  /// Pre-order: customers can order and pay now; the item ships later.
+  isPreorder    Boolean     @default(false)
+  /// Shown to shoppers for pre-orders, e.g. "Ships in 2–3 weeks".
+  preorderNote  String?
   isFeatured    Boolean     @default(false)
   features      String[]    @default([])
   options       Json?
