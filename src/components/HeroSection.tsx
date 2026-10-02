@@ -48,14 +48,16 @@ export const HeroSection: React.FC = () => {
     return [...featured, ...rest].slice(0, 6);
   }, [products]);
 
-  const current = spotlight.length > 0 ? spotlight[activeIndex % spotlight.length] : null;
+  const slideCount = spotlight.length + 1;
+  const activeSlide = activeIndex % slideCount;
+  const current = activeSlide > 0 ? spotlight[activeSlide - 1] : null;
 
   useEffect(() => {
-    if (spotlight.length < 2 || isPaused) return;
+    if (slideCount < 2 || isPaused) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const timer = window.setTimeout(() => setActiveIndex((i) => (i + 1) % spotlight.length), ROTATE_MS);
+    const timer = window.setTimeout(() => setActiveIndex((i) => (i + 1) % slideCount), ROTATE_MS);
     return () => window.clearTimeout(timer);
-  }, [activeIndex, spotlight.length, isPaused]);
+  }, [activeIndex, slideCount, isPaused]);
 
   const quickLinks = QUICK_LINKS.map((link) => {
     const match = link.categoryIcon && categories.find((category) => category.iconName === link.categoryIcon);
@@ -64,42 +66,45 @@ export const HeroSection: React.FC = () => {
 
   return (
     <section className="relative isolate overflow-hidden bg-ink-950 text-white">
-      {/* Rotating product backdrop. Each product is shown through a soft elliptical
+      {/* Rotating hero and product backdrops. Product photos are shown through a soft elliptical
           "spotlight" fade so white studio backgrounds melt into the navy instead of reading as boxes. */}
       <div className="absolute inset-0 -z-20" aria-hidden="true">
-        {spotlight.length === 0 ? (
-          <Image
-            src="/hero-background.jpg"
-            alt=""
-            fill
-            preload
-            sizes="100vw"
-            className="hero-kenburns object-cover object-[60%_20%] opacity-70 lg:object-[80%_center]"
-          />
-        ) : (
-          spotlight.map((product, index) => {
-            const isActive = index === activeIndex % spotlight.length;
-            return (
-              <div
-                key={product.id}
-                className={`absolute inset-0 transition-opacity duration-[1400ms] ease-out ${isActive ? 'opacity-100' : 'opacity-0'}`}
-              >
-                <div className="hero-spotlight absolute inset-x-0 top-0 h-[48%] sm:h-[52%] lg:inset-y-0 lg:left-auto lg:right-0 lg:h-full lg:w-[58%]">
-                  <div className={`absolute inset-[12%] lg:inset-[14%] ${isActive ? 'hero-kenburns' : ''}`}>
-                    <Image
-                      src={product.image}
-                      alt=""
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 58vw"
-                      loading={index < 2 ? 'eager' : 'lazy'}
-                      className="object-contain"
-                    />
-                  </div>
+        <div className={`absolute inset-0 transition-opacity duration-[1400ms] ease-out ${activeSlide === 0 ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="hero-spotlight absolute inset-x-0 top-0 h-[48%] sm:h-[52%] lg:inset-y-0 lg:left-auto lg:right-0 lg:h-full lg:w-[58%]">
+            <div className="hero-kenburns absolute inset-[12%] lg:inset-[14%]">
+              <Image
+                src="/laptophero.jpeg"
+                alt=""
+                fill
+                preload
+                sizes="(max-width: 1024px) 100vw, 58vw"
+                className="object-contain"
+              />
+            </div>
+          </div>
+        </div>
+        {spotlight.map((product, index) => {
+          const isActive = index + 1 === activeSlide;
+          return (
+            <div
+              key={product.id}
+              className={`absolute inset-0 transition-opacity duration-[1400ms] ease-out ${isActive ? 'opacity-100' : 'opacity-0'}`}
+            >
+              <div className="hero-spotlight absolute inset-x-0 top-0 h-[48%] sm:h-[52%] lg:inset-y-0 lg:left-auto lg:right-0 lg:h-full lg:w-[58%]">
+                <div className={`absolute inset-[12%] lg:inset-[14%] ${isActive ? 'hero-kenburns' : ''}`}>
+                  <Image
+                    src={product.image}
+                    alt=""
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 58vw"
+                    loading={index < 2 ? 'eager' : 'lazy'}
+                    className="object-contain"
+                  />
                 </div>
               </div>
-            );
-          })
-        )}
+            </div>
+          );
+        })}
       </div>
       {/* Phones: product glows at the top and fades into the text below. */}
       <div className="absolute inset-0 -z-10 bg-linear-to-b from-transparent from-15% via-ink-950/85 via-50% to-ink-950 lg:hidden" />
@@ -178,23 +183,27 @@ export const HeroSection: React.FC = () => {
                   <ArrowRight className="ml-auto mt-0.5 h-3.5 w-3.5 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-white" />
                 </span>
               </button>
-              {spotlight.length > 1 && (
-                <div className="mt-2.5 flex gap-1.5 pl-1" role="tablist" aria-label="Featured products">
-                  {spotlight.map((product, index) => (
-                    <button
-                      key={product.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={index === activeIndex % spotlight.length}
-                      aria-label={`Show ${product.name}`}
-                      onClick={() => setActiveIndex(index)}
-                      className={`h-1.5 rounded-full transition-all ${
-                        index === activeIndex % spotlight.length ? 'w-6 bg-brand-green' : 'w-1.5 bg-white/30 hover:bg-white/60'
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
+            </div>
+          )}
+
+          {slideCount > 1 && (
+            <div className="hero-fade-up mt-3 flex gap-1.5 pl-1" role="tablist" aria-label="Hero slides">
+              {Array.from({ length: slideCount }, (_, index) => {
+                const product = index > 0 ? spotlight[index - 1] : null;
+                return (
+                  <button
+                    key={product?.id || 'laptop-hero'}
+                    type="button"
+                    role="tab"
+                    aria-selected={index === activeSlide}
+                    aria-label={`Show ${product?.name || 'laptop image'}`}
+                    onClick={() => setActiveIndex(index)}
+                    className={`h-1.5 rounded-full transition-all ${
+                      index === activeSlide ? 'w-6 bg-brand-green' : 'w-1.5 bg-white/30 hover:bg-white/60'
+                    }`}
+                  />
+                );
+              })}
             </div>
           )}
 
