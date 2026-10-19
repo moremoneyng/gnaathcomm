@@ -22,6 +22,7 @@ async function main() {
     solarQuoteRequests: await prisma.solarQuoteRequest.findMany(),
     users: await prisma.user.findMany(),
     adminUsers: await prisma.adminUser.findMany(),
+    otpVerifications: await prisma.otpVerification.findMany(),
   };
 
   mkdirSync('backups', { recursive: true });

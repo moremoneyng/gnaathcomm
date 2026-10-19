@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { UploadCloud, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
-import { compressImage } from '@/utils/compressImage';
+import { uploadMedia } from '@/utils/uploadMedia';
 
 interface ImageUploaderProps {
   currentImageUrl?: string;
@@ -30,28 +30,15 @@ export function ImageUploader({
     setUploading(true);
 
     try {
-      const compressedFile = await compressImage(file);
-      const formData = new FormData();
-      formData.append('file', compressedFile);
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (data.success && data.url) {
-        setPreview(data.url);
-        setSuccess(true);
-        onUploadSuccess(data.url);
-      } else {
-        throw new Error(data.error || 'Failed to upload image');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Upload error');
+      const url = await uploadMedia(file, 'image');
+      setPreview(url);
+      setSuccess(true);
+      onUploadSuccess(url);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Upload error');
     } finally {
       setUploading(false);
+      e.target.value = '';
     }
   };
 

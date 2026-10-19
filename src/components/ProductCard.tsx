@@ -180,9 +180,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, eager = false
                 type="button"
                 onClick={handleOrderNow}
                 title="Order now with secure Flutterwave checkout"
-                className="flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full bg-ink-900 px-3 text-xs font-extrabold text-white transition hover:bg-emerald-600 active:scale-[0.98]"
+                className="flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full bg-ink-900 px-2.5 text-xs font-extrabold sm:px-3 text-white transition hover:bg-emerald-600 active:scale-[0.98]"
               >
-                <Zap className={`h-3.5 w-3.5 shrink-0 text-brand-green group-hover:text-white ${isPreorder ? 'hidden sm:block' : ''}`} />
+                <Zap className={`h-3.5 w-3.5 shrink-0 text-brand-green group-hover:text-white ${isPreorder ? 'hidden sm:block' : 'hidden min-[400px]:block'}`} />
                 <span className="truncate">{hasOptions ? 'Choose' : isPreorder ? 'Pre-order' : 'Buy now'}</span>
               </button>
             </>

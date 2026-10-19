@@ -1,4 +1,7 @@
-const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+// Kept under Vercel's ~4.5 MB body limit so the server fallback upload works too.
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+/** Formats every browser displays; anything else (e.g. HEIC from iPhones) is converted to JPEG. */
+const WEB_SAFE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_IMAGE_DIMENSION = 2400;
 const MIN_QUALITY = 0.65;
 const QUALITY_STEP = 0.08;
@@ -14,7 +17,7 @@ function loadImage(file: File): Promise<HTMLImageElement> {
     };
     image.onerror = () => {
       URL.revokeObjectURL(objectUrl);
-      reject(new Error('The selected file could not be read as an image.'));
+      reject(new Error('This photo format could not be read. Please choose a JPG, PNG or WebP image.'));
     };
     image.src = objectUrl;
   });
@@ -36,7 +39,8 @@ export async function compressImage(file: File): Promise<File> {
     throw new Error('Please select an image file.');
   }
 
-  if (file.size <= MAX_UPLOAD_BYTES && file.type === 'image/jpeg') {
+  // Small web-safe files upload untouched, so PNG transparency and original quality are kept.
+  if (file.size <= MAX_UPLOAD_BYTES && WEB_SAFE_TYPES.has(file.type)) {
     return file;
   }
 
@@ -51,6 +55,9 @@ export async function compressImage(file: File): Promise<File> {
     throw new Error('Your browser does not support image compression.');
   }
 
+  // JPEG has no transparency: paint white first so transparent PNG product shots don't turn black.
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, canvas.width, canvas.height);
   context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
   let quality = 0.9;

@@ -2,7 +2,7 @@
 
 import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useStore } from '@/context/StoreContext';
+import { DEFAULT_SHOP_FILTERS, useStore } from '@/context/StoreContext';
 import { useCategories } from '@/hooks/useCategories';
 import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import { ProductModal } from '@/components/ProductModal';
@@ -15,30 +15,46 @@ const availabilityRank = (p: { inStock: boolean; isPreorder?: boolean }) => (!p.
 
 type ShopSort = 'featured' | 'newest' | 'price-low' | 'price-high' | 'rating';
 
-/** Applies ?category= and ?search= whenever the URL changes, including in-app navigation. */
+/**
+ * Applies ?category= and ?search= when they change, including in-app navigation. Keyed on the values
+ * themselves so other params (e.g. ?product= from the details popup) don't reset what the shopper typed.
+ */
 function ShopUrlSync() {
   const searchParams = useSearchParams();
   const { setSelectedCategory, setSearchQuery } = useStore();
+  const category = searchParams.get('category');
+  const search = searchParams.get('search');
 
   useEffect(() => {
-    const category = searchParams.get('category');
-    const search = searchParams.get('search');
     if (category) setSelectedCategory(category);
+  }, [category, setSelectedCategory]);
+
+  useEffect(() => {
     if (search !== null) setSearchQuery(search);
-  }, [searchParams, setSelectedCategory, setSearchQuery]);
+  }, [search, setSearchQuery]);
 
   return null;
 }
 
 export default function ShopPage() {
-  const { products, isLoadingProducts, searchQuery, setSearchQuery, selectedCategory, setSelectedCategory } = useStore();
+  const {
+    products,
+    isLoadingProducts,
+    searchQuery,
+    setSearchQuery,
+    selectedCategory,
+    setSelectedCategory,
+    sortBy,
+    setSortBy,
+    shopFilters,
+    setShopFilters,
+  } = useStore();
   const { categories } = useCategories();
 
-  const [selectedBrand, setSelectedBrand] = useState('all');
-  const [inStockOnly, setInStockOnly] = useState(false);
-  const [onSaleOnly, setOnSaleOnly] = useState(false);
-  const [preorderOnly, setPreorderOnly] = useState(false);
-  const [sortBy, setSortBy] = useState<ShopSort>('featured');
+  // Filters live in the store so they are still applied when the shopper comes back from checkout.
+  const { brand: selectedBrand, inStockOnly, onSaleOnly, preorderOnly } = shopFilters;
+  const setSelectedBrand = (brand: string) => setShopFilters((f) => ({ ...f, brand }));
+  const toggleFilter = (key: 'inStockOnly' | 'onSaleOnly' | 'preorderOnly') => setShopFilters((f) => ({ ...f, [key]: !f[key] }));
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
 
   const availableBrands = useMemo(() => {
@@ -97,10 +113,7 @@ export default function ShopPage() {
   const resetAllFilters = () => {
     setSelectedCategory('all');
     setSearchQuery('');
-    setSelectedBrand('all');
-    setInStockOnly(false);
-    setOnSaleOnly(false);
-    setPreorderOnly(false);
+    setShopFilters(DEFAULT_SHOP_FILTERS);
     setSortBy('featured');
   };
 
@@ -125,7 +138,7 @@ export default function ShopPage() {
       <button
         type="button"
         aria-pressed={inStockOnly}
-        onClick={() => setInStockOnly((v) => !v)}
+        onClick={() => toggleFilter('inStockOnly')}
         className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-xs font-bold ring-1 transition ${
           inStockOnly ? 'bg-emerald-600 text-white ring-emerald-600' : 'bg-white text-slate-700 ring-slate-200 hover:ring-slate-300'
         }`}
@@ -137,7 +150,7 @@ export default function ShopPage() {
         <button
           type="button"
           aria-pressed={preorderOnly}
-          onClick={() => setPreorderOnly((v) => !v)}
+          onClick={() => toggleFilter('preorderOnly')}
           className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-xs font-bold ring-1 transition ${
             preorderOnly ? 'bg-amber-400 text-ink-900 ring-amber-400' : 'bg-white text-slate-700 ring-slate-200 hover:ring-slate-300'
           }`}
@@ -149,7 +162,7 @@ export default function ShopPage() {
       <button
         type="button"
         aria-pressed={onSaleOnly}
-        onClick={() => setOnSaleOnly((v) => !v)}
+        onClick={() => toggleFilter('onSaleOnly')}
         className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-xs font-bold ring-1 transition ${
           onSaleOnly ? 'bg-rose-600 text-white ring-rose-600' : 'bg-white text-slate-700 ring-slate-200 hover:ring-slate-300'
         }`}

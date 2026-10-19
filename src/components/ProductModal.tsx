@@ -22,7 +22,7 @@ import { cleanPhoneNumber, formatCurrency } from '@/utils/whatsapp';
 
 interface ProductModalDialogProps {
   product: Product;
-  onClose: () => void;
+  onClose: (options?: { navigating?: boolean }) => boolean | void;
 }
 
 function ProductModalDialog({ product, onClose }: ProductModalDialogProps) {
@@ -80,8 +80,9 @@ function ProductModalDialog({ product, onClose }: ProductModalDialogProps) {
 
   const handleOrderNow = () => {
     addToCart(product, quantity, selectedOptions);
-    onClose();
-    router.push('/checkout');
+    // Replace the details' history entry so Back from checkout returns straight to the list.
+    if (onClose({ navigating: true })) router.replace('/checkout');
+    else router.push('/checkout');
   };
 
   const enquiryUrl = `https://wa.me/${cleanPhoneNumber(storeConfig.whatsappNumber)}?text=${encodeURIComponent(
@@ -91,7 +92,7 @@ function ProductModalDialog({ product, onClose }: ProductModalDialogProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-ink-950/60 backdrop-blur-sm sm:items-center sm:p-6"
-      onClick={onClose}
+      onClick={() => onClose()}
       role="presentation"
     >
       <div
@@ -103,7 +104,7 @@ function ProductModalDialog({ product, onClose }: ProductModalDialogProps) {
       >
         <button
           type="button"
-          onClick={onClose}
+          onClick={() => onClose()}
           aria-label="Close product details"
           className="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-600 shadow-sm ring-1 ring-slate-200 backdrop-blur hover:text-slate-900"
         >
@@ -117,7 +118,7 @@ function ProductModalDialog({ product, onClose }: ProductModalDialogProps) {
               <div
                 ref={galleryRef}
                 onScroll={handleGalleryScroll}
-                className="no-scrollbar flex aspect-square snap-x snap-mandatory overflow-x-auto md:aspect-[4/4.2]"
+                className="no-scrollbar flex aspect-square max-h-[44vh] w-full snap-x snap-mandatory overflow-x-auto md:aspect-[4/4.2] md:max-h-none"
               >
                 {allImages.map((img, idx) => (
                   <div key={img} className="relative h-full w-full shrink-0 snap-center">
@@ -127,7 +128,7 @@ function ProductModalDialog({ product, onClose }: ProductModalDialogProps) {
                       fill
                       sizes="(max-width: 768px) 100vw, 50vw"
                       preload={idx === 0}
-                      className={`object-contain p-8 sm:p-12 ${product.inStock ? '' : 'opacity-70 grayscale-30'}`}
+                      className={`object-contain p-6 sm:p-12 ${product.inStock ? '' : 'opacity-70 grayscale-30'}`}
                     />
                   </div>
                 ))}

@@ -46,6 +46,11 @@ export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
 
 export const UPLOAD_FOLDER = 'gnaath_communications';
 
+/** Signs Cloudinary upload parameters so an admin's browser can upload directly. */
+export function signUploadParams(params: Record<string, string | number>) {
+  return cloudinary.utils.api_sign_request(params, process.env.CLOUDINARY_API_SECRET as string);
+}
+
 /** Lists every upload of one resource type in the store's Cloudinary folder (Admin API, paginated). */
 export async function listFolderAssets(resourceType: 'image' | 'video', maxAssets = 5000) {
   const assets: Array<{

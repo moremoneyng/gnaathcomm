@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
@@ -11,6 +11,8 @@ import { ArrowRight, LayoutGrid } from 'lucide-react';
 export function CategoryBar() {
   const { selectedCategory, setSelectedCategory, products } = useStore();
   const { categories, isLoading } = useCategories();
+  // Category photos are optional; a dead link falls back to the plain navy tile instead of a broken image.
+  const [failedImages, setFailedImages] = useState<Set<string>>(() => new Set());
 
   const tileBase =
     'group relative flex h-32 w-[8.5rem] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-2xl p-3 text-left transition duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 sm:h-40 sm:w-auto';
@@ -79,11 +81,12 @@ export function CategoryBar() {
                     isSelected ? 'ring-2 ring-emerald-400 ring-offset-2' : 'hover:-translate-y-0.5 hover:shadow-lg'
                   }`}
                 >
-                  {category.image && (
+                  {category.image && !failedImages.has(category.image) && (
                     <Image
                       src={category.image}
                       alt=""
                       fill
+                      onError={() => setFailedImages((prev) => new Set(prev).add(category.image!))}
                       sizes="(max-width: 640px) 140px, (max-width: 1024px) 25vw, 16vw"
                       className="object-cover opacity-60 transition duration-500 group-hover:scale-110 group-hover:opacity-70"
                     />

@@ -3,7 +3,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import Image from 'next/image';
 import { UploadCloud, Loader2, AlertCircle, ChevronLeft, ChevronRight, Star, Trash2, Undo2, ImagePlus } from 'lucide-react';
-import { compressImage } from '@/utils/compressImage';
+import { uploadMedia } from '@/utils/uploadMedia';
 
 interface MultiImageUploaderProps {
   currentImages?: string[];
@@ -59,16 +59,8 @@ export function MultiImageUploader({
 
     for (const [index, file] of queue.entries()) {
       try {
-        const compressedFile = await compressImage(file);
-        const formData = new FormData();
-        formData.append('file', compressedFile);
-
-        const response = await fetch('/api/upload', { method: 'POST', body: formData });
-        const data = await response.json();
-        if (!response.ok || !data.success || !data.url) {
-          throw new Error(data.error || 'Failed to upload image');
-        }
-        update([...imagesRef.current, data.url]);
+        const url = await uploadMedia(file, 'image');
+        update([...imagesRef.current, url]);
       } catch (err: unknown) {
         setError(`${file.name}: ${err instanceof Error ? err.message : 'Upload error'}`);
       } finally {

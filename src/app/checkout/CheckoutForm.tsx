@@ -65,8 +65,8 @@ export function CheckoutForm() {
         <Link href="/shop" className="mb-7 inline-flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-emerald-700">
           <ArrowLeft className="h-4 w-4" /> Continue shopping
         </Link>
-        <div className="grid gap-8 lg:grid-cols-[1fr_0.8fr]">
-          <form onSubmit={submit} className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <div className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)]">
+          <form onSubmit={submit} className="min-w-0 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
             <div className="mb-7">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">Secure checkout</p>
               <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Delivery details</h1>
@@ -117,7 +117,7 @@ export function CheckoutForm() {
             <p className="mt-3 text-center text-xs text-slate-500">Card, bank transfer and USSD supported. Payment is processed securely by Flutterwave.</p>
           </form>
 
-          <aside className="h-fit rounded-[2rem] bg-slate-950 p-6 text-white shadow-2xl sm:p-8">
+          <aside className="h-fit min-w-0 rounded-[2rem] bg-slate-950 p-5 text-white shadow-2xl sm:p-8">
             <h2 className="text-xl font-black">Order Summary</h2>
             <div className="mt-6 space-y-4">
               {cart.map((item) => (
@@ -130,7 +130,7 @@ export function CheckoutForm() {
                     <p className="mt-1 text-xs text-slate-400">Quantity {item.quantity}</p>
                     <div className="mt-1"><AvailabilityBadge product={item.product} tone="dark" /></div>
                   </div>
-                  <p className="text-sm font-black">{formatCurrency(item.product.price * item.quantity, storeConfig.currencySymbol)}</p>
+                  <p className="shrink-0 text-sm font-black">{formatCurrency(item.product.price * item.quantity, storeConfig.currencySymbol)}</p>
                 </div>
               ))}
             </div>

@@ -4,6 +4,18 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { CartItem, CustomerDetails, Product, StoreConfig } from '@/types/ecommerce';
 import { DEFAULT_STORE_CONFIG } from '@/data/storeCatalog';
 
+/** History-state key marking the entry pushed while a product's details are open. */
+const PRODUCT_MODAL_HISTORY_KEY = 'gnaathProductModal';
+
+export interface ShopFilters {
+  brand: string;
+  inStockOnly: boolean;
+  onSaleOnly: boolean;
+  preorderOnly: boolean;
+}
+
+export const DEFAULT_SHOP_FILTERS: ShopFilters = { brand: 'all', inStockOnly: false, onSaleOnly: false, preorderOnly: false };
+
 export interface User {
   id: string;
   name: string;
@@ -55,7 +67,11 @@ interface StoreContextType {
   // Product Modal / Quick View
   activeProductModal: Product | null;
   openProductModal: (product: Product) => void;
-  closeProductModal: () => void;
+  /**
+   * Closes the details. Pass `{ navigating: true }` when a route change follows immediately; it then
+   * returns true if that navigation should `router.replace` the details' own history entry.
+   */
+  closeProductModal: (options?: { navigating?: boolean }) => boolean;
 
   // Config Modal
   isConfigModalOpen: boolean;
@@ -68,6 +84,9 @@ interface StoreContextType {
   setSelectedCategory: (category: string) => void;
   sortBy: 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest';
   setSortBy: (sort: 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest') => void;
+  /** Shop page filters; kept here so they survive a trip to checkout and back. */
+  shopFilters: ShopFilters;
+  setShopFilters: React.Dispatch<React.SetStateAction<ShopFilters>>;
 
   // Toast notification
   toastMessage: string | null;
@@ -104,6 +123,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState<'featured' | 'price-low' | 'price-high' | 'rating' | 'newest'>('featured');
+  const [shopFilters, setShopFilters] = useState<ShopFilters>(DEFAULT_SHOP_FILTERS);
 
   // Check auth session
   const checkAuthStatus = async () => {
@@ -165,6 +185,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const openedSharedLink = useRef(false);
+
   /** Pushes fresh product data everywhere a shopper can see it: grid, open popup and cart. */
   const applyFreshProducts = (fresh: Product[]) => {
     setProducts(fresh);
@@ -176,6 +198,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       })
     );
     setActiveProductModal((current) => (current ? byId.get(current.id) || { ...current, inStock: false } : current));
+
+    // Shared links (?product=<id>) open that product's details once the catalogue first loads.
+    if (!openedSharedLink.current && fresh.length > 0) {
+      openedSharedLink.current = true;
+      const shared = byId.get(new URL(window.location.href).searchParams.get('product') || '');
+      if (shared) setActiveProductModal(shared);
+    }
   };
 
   useEffect(() => {
@@ -364,13 +393,42 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const isInWishlist = (productId: string) => wishlist.includes(productId);
 
-  const openProductModal = (product: Product) => {
-    setActiveProductModal(product);
+  // Product details get their own history entry (?product=<id>), so the phone/browser Back button
+  // closes them and leaves the shopper exactly where they were in the list instead of leaving the page.
+  const productUrl = (productId: string | null) => {
+    const url = new URL(window.location.href);
+    if (productId) url.searchParams.set('product', productId);
+    else url.searchParams.delete('product');
+    return url.pathname + url.search + url.hash;
   };
 
-  const closeProductModal = () => {
-    setActiveProductModal(null);
+  const openProductModal = (product: Product) => {
+    setActiveProductModal(product);
+    const entry = { [PRODUCT_MODAL_HISTORY_KEY]: product.id };
+    if (window.history.state?.[PRODUCT_MODAL_HISTORY_KEY]) window.history.replaceState(entry, '', productUrl(product.id));
+    else window.history.pushState(entry, '', productUrl(product.id));
   };
+
+  const closeProductModal = ({ navigating = false }: { navigating?: boolean } = {}) => {
+    const hasOwnEntry = Boolean(window.history.state?.[PRODUCT_MODAL_HISTORY_KEY]);
+    if (hasOwnEntry && !navigating) {
+      window.history.back(); // the popstate listener below clears the modal
+      return false;
+    }
+    setActiveProductModal(null);
+    if (hasOwnEntry) return true;
+    if (new URL(window.location.href).searchParams.has('product')) window.history.replaceState(null, '', productUrl(null));
+    return false;
+  };
+
+  useEffect(() => {
+    const onPopState = (event: PopStateEvent) => {
+      const productId = event.state?.[PRODUCT_MODAL_HISTORY_KEY];
+      setActiveProductModal(productId ? productsRef.current.find((p) => p.id === productId) ?? null : null);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   function showToast(msg: string) {
     setToastMessage(msg);
@@ -421,6 +479,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         setSelectedCategory,
         sortBy,
         setSortBy,
+        shopFilters,
+        setShopFilters,
         toastMessage,
         showToast,
       }}
