@@ -23,6 +23,10 @@ import {
 
 /** How long each product stays in the hero before cross-fading to the next. */
 const ROTATE_MS = 6000;
+const HERO_IMAGES = [
+  { src: '/laptophero.jpeg', label: 'Laptop showcase' },
+  { src: '/hero-background.jpg', label: 'Anker charging accessories' },
+];
 
 // Each link jumps to the matching category when one exists, otherwise to a sensible fallback.
 const QUICK_LINKS = [
@@ -48,9 +52,10 @@ export const HeroSection: React.FC = () => {
     return [...featured, ...rest].slice(0, 6);
   }, [products]);
 
-  const slideCount = spotlight.length + 1;
+  const slideCount = spotlight.length + HERO_IMAGES.length;
   const activeSlide = activeIndex % slideCount;
-  const current = activeSlide > 0 ? spotlight[activeSlide - 1] : null;
+  const productSlideIndex = activeSlide - HERO_IMAGES.length;
+  const current = productSlideIndex >= 0 ? spotlight[productSlideIndex] : null;
 
   useEffect(() => {
     if (slideCount < 2 || isPaused) return;
@@ -69,22 +74,30 @@ export const HeroSection: React.FC = () => {
       {/* Rotating hero and product backdrops. Product photos are shown through a soft elliptical
           "spotlight" fade so white studio backgrounds melt into the navy instead of reading as boxes. */}
       <div className="absolute inset-0 -z-20" aria-hidden="true">
-        <div className={`absolute inset-0 transition-opacity duration-[1400ms] ease-out ${activeSlide === 0 ? 'opacity-100' : 'opacity-0'}`}>
-          <div className="hero-spotlight absolute inset-x-0 top-0 h-[48%] sm:h-[52%] lg:inset-y-0 lg:left-auto lg:right-0 lg:h-full lg:w-[58%]">
-            <div className="hero-kenburns absolute inset-[12%] lg:inset-[14%]">
-              <Image
-                src="/laptophero.jpeg"
-                alt=""
-                fill
-                preload
-                sizes="(max-width: 1024px) 100vw, 58vw"
-                className="object-contain"
-              />
+        {HERO_IMAGES.map((image, index) => {
+          const isActive = index === activeSlide;
+          return (
+            <div
+              key={image.src}
+              className={`absolute inset-0 transition-opacity duration-[1400ms] ease-out ${isActive ? 'opacity-100' : 'opacity-0'}`}
+            >
+              <div className="hero-spotlight absolute inset-x-0 top-0 h-[48%] sm:h-[52%] lg:inset-y-0 lg:left-auto lg:right-0 lg:h-full lg:w-[58%]">
+                <div className={`absolute inset-[12%] lg:inset-[14%] ${isActive ? 'hero-kenburns' : ''}`}>
+                  <Image
+                    src={image.src}
+                    alt=""
+                    fill
+                    preload={index === 0}
+                    sizes="(max-width: 1024px) 100vw, 58vw"
+                    className="object-contain"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })}
         {spotlight.map((product, index) => {
-          const isActive = index + 1 === activeSlide;
+          const isActive = index + HERO_IMAGES.length === activeSlide;
           return (
             <div
               key={product.id}
@@ -141,14 +154,16 @@ export const HeroSection: React.FC = () => {
               className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-3 py-3.5 text-[13px] font-extrabold sm:gap-2.5 sm:px-7 sm:py-4 sm:text-sm text-ink-900 shadow-[0_10px_40px_-10px_rgba(52,211,153,0.6)] transition hover:-translate-y-0.5 hover:bg-emerald-50"
             >
               <ShoppingBag className="hidden h-4 w-4 sm:block" />
-              Shop All Products
+              <span className="whitespace-nowrap min-[400px]:hidden">Shop Products</span>
+              <span className="hidden whitespace-nowrap min-[400px]:inline">Shop All Products</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="#catalog"
               className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-3.5 text-[13px] font-extrabold sm:gap-2.5 sm:px-7 sm:py-4 sm:text-sm text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:border-emerald-300/60 hover:bg-white/15"
             >
-              Explore Categories
+              <span className="whitespace-nowrap min-[400px]:hidden">Categories</span>
+              <span className="hidden whitespace-nowrap min-[400px]:inline">Explore Categories</span>
               <ArrowDown className="h-4 w-4" />
             </Link>
           </div>
@@ -189,14 +204,15 @@ export const HeroSection: React.FC = () => {
           {slideCount > 1 && (
             <div className="hero-fade-up mt-3 flex gap-1.5 pl-1" role="tablist" aria-label="Hero slides">
               {Array.from({ length: slideCount }, (_, index) => {
-                const product = index > 0 ? spotlight[index - 1] : null;
+                const heroImage = HERO_IMAGES[index];
+                const product = index >= HERO_IMAGES.length ? spotlight[index - HERO_IMAGES.length] : null;
                 return (
                   <button
-                    key={product?.id || 'laptop-hero'}
+                    key={product?.id || heroImage.src}
                     type="button"
                     role="tab"
                     aria-selected={index === activeSlide}
-                    aria-label={`Show ${product?.name || 'laptop image'}`}
+                    aria-label={`Show ${product?.name || heroImage.label}`}
                     onClick={() => setActiveIndex(index)}
                     className={`h-1.5 rounded-full transition-all ${
                       index === activeSlide ? 'w-6 bg-brand-green' : 'w-1.5 bg-white/30 hover:bg-white/60'
