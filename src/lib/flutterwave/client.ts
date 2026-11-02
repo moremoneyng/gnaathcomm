@@ -76,7 +76,7 @@ export async function createFlutterwavePayment(
         name: input.customer.name,
       },
       customizations: {
-        title: 'G Naath Global Communications',
+        title: 'G Naath Global Services',
         description: `Payment for order ${input.orderNumber}`,
       },
       meta: { order_number: input.orderNumber },

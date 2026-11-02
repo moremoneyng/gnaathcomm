@@ -22,10 +22,11 @@ const displayFont = Sora({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://gnaathcommunications.com'),
-  title: 'G Naath Global Communications Ltd | Everything Modern, All in One Place',
+  title: 'G Naath Global Services Ltd | Everything Modern, All in One Place',
   description:
     'Shop smartphones, electronics, home and office appliances, solar systems, gadgets, cars and bikes at G Naath, with expert repairs and installations in Lagos and Abia State.',
   keywords: [
+    'G Naath Global Services',
     'G Naath Global Communications',
     'Mobile Phones Lagos',
     'Phone Accessories Isolo Ago Palace',
@@ -36,22 +37,22 @@ export const metadata: Metadata = {
     'Solar Installation Lagos',
     'Solar Materials Sales',
   ],
-  authors: [{ name: 'G Naath Global Communications Ltd' }],
+  authors: [{ name: 'G Naath Global Services Ltd' }],
   icons: {
     icon: '/gnaathlogo-header.png',
     apple: '/gnaathlogo-header.png',
   },
   openGraph: {
-    title: 'G Naath Global Communications Ltd',
+    title: 'G Naath Global Services Ltd',
     description: 'Everything modern in one trusted place: technology, appliances, solar energy, mobility, accessories and expert services.',
     url: 'https://gnaathcommunications.com',
-    siteName: 'G Naath Global Communications Ltd',
+    siteName: 'G Naath Global Services Ltd',
     images: [
       {
         url: '/gnaathlogo-header.png',
         width: 1200,
         height: 630,
-        alt: 'G Naath Global Communications Ltd Logo',
+        alt: 'G Naath Global Services Ltd Logo',
       },
     ],
     locale: 'en_NG',

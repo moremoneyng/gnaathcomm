@@ -1,14 +1,14 @@
 import { Category, StoreConfig } from '@/types/ecommerce';
 
 export const DEFAULT_STORE_CONFIG: StoreConfig = {
-  storeName: 'G Naath Global Communications Ltd',
+  storeName: 'G Naath Global Services Ltd',
   motto: 'Ultimate Satisfaction Assured!',
   rcNumber: 'RC: 6898302',
   tagline: 'Everything Modern. All in One Place.',
   whatsappNumber: '+2347034791996',
   whatsappDisplayNumber: '07034791996',
   email: 'gnaathglobal@gmail.com',
-  facebookName: 'G Naath Global Communications Ltd',
+  facebookName: 'G Naath Global Services Ltd',
   facebookUrl: 'https://facebook.com',
   currencySymbol: '₦',
   currencyCode: 'NGN',

@@ -61,7 +61,7 @@ export async function sendOtpEmail(email: string, code: string, type: 'REGISTER'
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; color: #1e293b;">
       <div style="background-color: #0f172a; padding: 24px; text-align: center; border-radius: 16px 16px 0 0;">
         <h1 style="color: #10b981; margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 1px;">G NAATH GLOBAL</h1>
-        <p style="color: #94a3b8; margin: 4px 0 0 0; font-size: 11px; font-weight: 700; text-transform: uppercase;">COMMUNICATIONS LTD</p>
+        <p style="color: #94a3b8; margin: 4px 0 0 0; font-size: 11px; font-weight: 700; text-transform: uppercase;">SERVICES LTD</p>
       </div>
 
       <div style="background-color: #ffffff; padding: 32px; border-radius: 0 0 16px 16px; border: 1px solid #e2e8f0;">
@@ -78,7 +78,7 @@ export async function sendOtpEmail(email: string, code: string, type: 'REGISTER'
         <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0;" />
 
         <div style="font-size: 12px; color: #94a3b8; text-align: center;">
-          <p style="margin: 4px 0;"><strong>G Naath Global Communications Ltd</strong> • RC: 6898302</p>
+          <p style="margin: 4px 0;"><strong>G Naath Global Services Ltd</strong> • RC: 6898302</p>
           <p style="margin: 4px 0;">Lagos Head Office & ABSU Uturu Branch</p>
           <p style="margin: 4px 0;">WhatsApp: +234 703 479 1996</p>
         </div>
@@ -128,7 +128,7 @@ export async function sendOrderReceiptEmail(email: string, name: string, order: 
         </div>
 
         <p style="font-size: 14px; color: #334155; line-height: 1.6;">Hello <strong>${name}</strong>,</p>
-        <p style="font-size: 14px; color: #475569; line-height: 1.6;">Thank you for your order at G Naath Global Communications Ltd! We have received your order and our dispatch team is processing it.</p>
+        <p style="font-size: 14px; color: #475569; line-height: 1.6;">Thank you for your order at G Naath Global Services Ltd! We have received your order and our dispatch team is processing it.</p>
 
         <h3 style="font-size: 15px; font-weight: 800; color: #0f172a; margin-top: 24px;">Order Summary</h3>
         <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">

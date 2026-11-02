@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { CheckoutForm } from './CheckoutForm';
 
 export const metadata: Metadata = {
-  title: 'Secure Checkout | G Naath Global Communications',
+  title: 'Secure Checkout | G Naath Global Services',
   description: 'Complete your G Naath order securely with Flutterwave.',
 };
 

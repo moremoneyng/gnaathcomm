@@ -400,7 +400,7 @@ export default function AdminPage() {
           </form>
 
           <div className="text-center border-t border-slate-100 pt-4 text-[11px] text-slate-400 font-medium">
-            G Naath Global Communications Ltd • Ultimate Satisfaction Assured!
+            G Naath Global Services Ltd • Ultimate Satisfaction Assured!
           </div>
         </div>
       </div>
